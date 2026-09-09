@@ -8,7 +8,8 @@ const authRoutes = require('./src/routes/authRoutes');
 const contratoRoutes = require('./src/routes/contratoRoutes');
 const pagoRoutes = require('./src/routes/pagoRoutes');
 const productoRoutes = require('./src/routes/productoRoutes');
-const { inicializarCatalogo } = require('./src/config/seed');
+const { inicializarCatalogo, inicializarAdministrador } = require('./src/config/seed');
+const adminRoutes = require('./src/routes/adminRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,6 +23,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/contratos', contratoRoutes);
 app.use('/api/pagos', pagoRoutes);
 app.use('/api/productos', productoRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -35,6 +37,7 @@ const startServer = async () => {
   try {
     await connectDB();
     await inicializarCatalogo();
+    await inicializarAdministrador();
 
     app.listen(PORT, () => {
       console.log(`Madereria Secure API escuchando en http://localhost:${PORT}`);

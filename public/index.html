@@ -34,6 +34,7 @@
         <nav class="topnav" aria-label="Navegación principal">
           <button class="nav-link is-active" type="button" data-view="home">INICIO</button>
           <button class="nav-link" type="button" data-view="catalog">CATÁLOGO</button>
+          <button class="nav-link admin-nav" id="admin-nav" type="button" data-view="admin" hidden>ADMINISTRACIÓN</button>
           <button class="nav-link" type="button" data-action="toggle-cart">
             CARRITO <span class="nav-count" id="cart-count">0</span>
           </button>
@@ -160,6 +161,74 @@
               </form>
               <p class="form-feedback" id="auth-feedback" role="alert" aria-live="polite"></p>
             </div>
+          </div>
+        </section>
+
+        <section class="view admin-view" id="view-admin" aria-labelledby="admin-title" hidden>
+          <div class="section-heading admin-heading">
+            <div>
+              <p class="eyebrow"><span class="eyebrow-line"></span> ÁREA INTERNA / CONTROL SEGURO</p>
+              <h2 id="admin-title">Panel <span class="accent-slash">//</span> administrativo</h2>
+              <p class="admin-lede">Consulta usuarios, pedidos, inventario y trazabilidad desde un espacio reservado para administradores.</p>
+            </div>
+            <div class="section-tools admin-tools">
+              <span class="feed-label"><span class="status-dot"></span> DATOS PROTEGIDOS</span>
+              <button class="btn btn-ghost btn-compact" type="button" id="admin-refresh">Actualizar panel</button>
+            </div>
+          </div>
+
+          <div class="admin-filters" aria-label="Filtros del panel administrativo">
+            <label>Desde<input id="admin-date-from" type="date" /></label>
+            <label>Hasta<input id="admin-date-to" type="date" /></label>
+            <button class="btn btn-primary btn-compact" type="button" id="admin-apply-filters">Aplicar filtros</button>
+          </div>
+
+          <div class="admin-metrics" aria-live="polite">
+            <article><span>USUARIOS REGISTRADOS</span><strong id="admin-metric-users">—</strong><small id="admin-metric-users-detail">—</small></article>
+            <article><span>PEDIDOS</span><strong id="admin-metric-orders">—</strong><small id="admin-metric-orders-detail">—</small></article>
+            <article><span>INGRESOS APROBADOS</span><strong id="admin-metric-revenue">—</strong><small>Ventas confirmadas</small></article>
+            <article><span>INVENTARIO ACTIVO</span><strong id="admin-metric-stock">—</strong><small id="admin-metric-stock-detail">—</small></article>
+          </div>
+
+          <p class="admin-feedback" id="admin-feedback" role="status" aria-live="polite"></p>
+
+          <div class="admin-panels">
+            <article class="admin-panel admin-panel-wide">
+              <div class="admin-panel-head">
+                <div><span class="panel-kicker">DIRECTORIO / CLIENTES</span><h3>Usuarios registrados</h3></div>
+                <div class="admin-inline-filters">
+                  <input id="admin-user-search" type="search" placeholder="Buscar correo" aria-label="Buscar usuario por correo" />
+                  <select id="admin-user-role" aria-label="Filtrar por rol"><option value="">Todos los roles</option><option value="cliente">Clientes</option><option value="admin">Administradores</option><option value="contador">Contadores</option></select>
+                  <select id="admin-user-status" aria-label="Filtrar por estado"><option value="">Todos los estados</option><option value="activo">Activos</option><option value="inactivo">Inactivos</option></select>
+                </div>
+              </div>
+              <div class="admin-table-wrap">
+                <table class="admin-table"><thead><tr><th>Correo</th><th>Rol</th><th>Estado</th><th>Alta</th></tr></thead><tbody id="admin-users-body"><tr><td colspan="4">Cargando usuarios…</td></tr></tbody></table>
+              </div>
+            </article>
+
+            <article class="admin-panel admin-panel-wide">
+              <div class="admin-panel-head">
+                <div><span class="panel-kicker">VENTAS / HISTORIAL</span><h3>Pedidos y compras</h3></div>
+                <div class="admin-inline-filters">
+                  <input id="admin-order-search" type="search" placeholder="Buscar folio" aria-label="Buscar pedido por folio" />
+                  <select id="admin-order-status" aria-label="Filtrar pedidos por estado"><option value="">Todos los estados</option><option value="APROBADO">Aprobados</option><option value="RECHAZADO">Rechazados</option></select>
+                </div>
+              </div>
+              <div class="admin-table-wrap">
+                <table class="admin-table"><thead><tr><th>Folio</th><th>Cliente</th><th>Productos</th><th>Total</th><th>Estado</th><th>Fecha</th></tr></thead><tbody id="admin-orders-body"><tr><td colspan="6">Cargando pedidos…</td></tr></tbody></table>
+              </div>
+            </article>
+
+            <article class="admin-panel admin-panel-wide">
+              <div class="admin-panel-head">
+                <div><span class="panel-kicker">AUDITORÍA / APPEND-ONLY</span><h3>Actividad reciente</h3></div>
+                <span class="admin-readonly">SOLO LECTURA</span>
+              </div>
+              <div class="admin-table-wrap">
+                <table class="admin-table"><thead><tr><th>Fecha UTC</th><th>Usuario</th><th>Acción</th><th>Resultado</th><th>IP</th></tr></thead><tbody id="admin-audit-body"><tr><td colspan="5">Cargando actividad…</td></tr></tbody></table>
+              </div>
+            </article>
           </div>
         </section>
       </main>

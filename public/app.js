@@ -3,13 +3,34 @@
 
   const API_BASE = String(window.MADERERIA_API_BASE || '').replace(/\/$/, '');
   const TOKEN_KEY = 'madereria_secure_token';
+  const USER_KEY = 'madereria_secure_user';
+
+  const readStoredUser = () => {
+    try {
+      return JSON.parse(localStorage.getItem(USER_KEY) || 'null');
+    } catch (_error) {
+      return null;
+    }
+  };
+
+  const decodeTokenUser = (token) => {
+    try {
+      const payload = JSON.parse(window.atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+      return payload?._id && payload?.rol ? { _id: payload._id, rol: payload.rol } : null;
+    } catch (_error) {
+      return null;
+    }
+  };
+
+  const initialToken = localStorage.getItem(TOKEN_KEY);
 
   const state = {
     products: [],
     cart: [],
     view: 'home',
     authMode: 'login',
-    token: localStorage.getItem(TOKEN_KEY),
+    token: initialToken,
+    user: readStoredUser() || (initialToken ? decodeTokenUser(initialToken) : null),
     toastTimer: null,
     invoice: null,
   };
@@ -17,6 +38,7 @@
   const refs = {
     apiStatus: document.getElementById('api-status'),
     sessionButton: document.getElementById('session-button'),
+    adminNav: document.getElementById('admin-nav'),
     productGrid: document.getElementById('product-grid'),
     catalogNotice: document.getElementById('catalog-notice'),
     catalogCount: document.getElementById('catalog-count'),
@@ -45,6 +67,26 @@
     loginForm: document.getElementById('login-form'),
     registerForm: document.getElementById('register-form'),
     authFeedback: document.getElementById('auth-feedback'),
+    adminRefresh: document.getElementById('admin-refresh'),
+    adminApplyFilters: document.getElementById('admin-apply-filters'),
+    adminDateFrom: document.getElementById('admin-date-from'),
+    adminDateTo: document.getElementById('admin-date-to'),
+    adminFeedback: document.getElementById('admin-feedback'),
+    adminMetricUsers: document.getElementById('admin-metric-users'),
+    adminMetricUsersDetail: document.getElementById('admin-metric-users-detail'),
+    adminMetricOrders: document.getElementById('admin-metric-orders'),
+    adminMetricOrdersDetail: document.getElementById('admin-metric-orders-detail'),
+    adminMetricRevenue: document.getElementById('admin-metric-revenue'),
+    adminMetricStock: document.getElementById('admin-metric-stock'),
+    adminMetricStockDetail: document.getElementById('admin-metric-stock-detail'),
+    adminUserSearch: document.getElementById('admin-user-search'),
+    adminUserRole: document.getElementById('admin-user-role'),
+    adminUserStatus: document.getElementById('admin-user-status'),
+    adminUsersBody: document.getElementById('admin-users-body'),
+    adminOrderSearch: document.getElementById('admin-order-search'),
+    adminOrderStatus: document.getElementById('admin-order-status'),
+    adminOrdersBody: document.getElementById('admin-orders-body'),
+    adminAuditBody: document.getElementById('admin-audit-body'),
   };
 
   const demoProducts = [
@@ -170,7 +212,117 @@
     refs.authFeedback.classList.toggle('is-error', isError);
   };
 
+  const setAdminFeedback = (message = '', isError = false) => {
+    refs.adminFeedback.textContent = message;
+    refs.adminFeedback.classList.toggle('is-error', isError);
+  };
+
+  const formatAdminDate = (value) => {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return new Intl.DateTimeFormat('es-MX', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(date);
+  };
+
+  const adminQuery = (extra = {}) => {
+    const params = new URLSearchParams();
+    if (refs.adminDateFrom.value) params.set('desde', refs.adminDateFrom.value);
+    if (refs.adminDateTo.value) params.set('hasta', refs.adminDateTo.value);
+    Object.entries(extra).forEach(([key, value]) => {
+      if (value) params.set(key, value);
+    });
+    const query = params.toString();
+    return query ? `?${query}` : '';
+  };
+
+  const adminRequest = (path) => apiRequest(path, {
+    headers: { Authorization: `Bearer ${state.token}` },
+  });
+
+  const renderAdminSummary = (summary) => {
+    refs.adminMetricUsers.textContent = summary.usuarios?.total ?? '—';
+    refs.adminMetricUsersDetail.textContent = `${summary.usuarios?.clientes ?? 0} clientes · ${summary.usuarios?.administradores ?? 0} admins`;
+    refs.adminMetricOrders.textContent = summary.pedidos?.total ?? '—';
+    refs.adminMetricOrdersDetail.textContent = `${summary.pedidos?.aprobados ?? 0} aprobados · ${summary.pedidos?.rechazados ?? 0} rechazados`;
+    refs.adminMetricRevenue.textContent = formatCurrency(summary.ingresos_aprobados);
+    refs.adminMetricStock.textContent = summary.inventario?.productos_activos ?? '—';
+    refs.adminMetricStockDetail.textContent = `${summary.inventario?.stock_bajo ?? 0} con stock bajo`;
+  };
+
+  const renderAdminUsers = (payload) => {
+    const usuarios = payload.datos || [];
+    refs.adminUsersBody.innerHTML = usuarios.length
+      ? usuarios.map((usuario) => `<tr><td>${escapeHTML(usuario.correo)}</td><td><span class="admin-pill">${escapeHTML(usuario.rol || 'cliente')}</span></td><td>${escapeHTML(usuario.estado || 'activo')}</td><td>${formatAdminDate(usuario.fecha_alta)}</td></tr>`).join('')
+      : '<tr><td colspan="4">No se encontraron usuarios con esos filtros.</td></tr>';
+  };
+
+  const renderAdminOrders = (payload) => {
+    const pedidos = payload.datos || [];
+    refs.adminOrdersBody.innerHTML = pedidos.length
+      ? pedidos.map((pedido) => {
+        const cliente = typeof pedido.usuario_id === 'object' ? pedido.usuario_id?.correo : '—';
+        const productos = (pedido.items || []).map((item) => `${item.tipo_madera} × ${item.cantidad}`).join(', ') || '—';
+        const statusClass = pedido.estado === 'APROBADO' ? 'is-approved' : 'is-rejected';
+        return `<tr><td>${escapeHTML(pedido.folio || '—')}</td><td>${escapeHTML(cliente || '—')}</td><td>${escapeHTML(productos)}</td><td>${formatCurrency(pedido.total)}</td><td><span class="admin-status ${statusClass}">${escapeHTML(pedido.estado || '—')}</span></td><td>${formatAdminDate(pedido.fecha)}</td></tr>`;
+      }).join('')
+      : '<tr><td colspan="6">No se encontraron pedidos con esos filtros.</td></tr>';
+  };
+
+  const renderAdminAudit = (payload) => {
+    const logs = payload.datos || [];
+    refs.adminAuditBody.innerHTML = logs.length
+      ? logs.map((log) => {
+        const usuario = typeof log.usuario_id === 'object' ? log.usuario_id?.correo : '—';
+        const resultado = String(log.resultado || '—');
+        const resultClass = resultado.toLowerCase().includes('aprob') ? 'is-approved' : resultado.toLowerCase().includes('rechaz') ? 'is-rejected' : '';
+        return `<tr><td>${formatAdminDate(log.fecha_utc)}</td><td>${escapeHTML(usuario || '—')}</td><td>${escapeHTML(log.accion || '—')}</td><td><span class="admin-status ${resultClass}">${escapeHTML(resultado)}</span></td><td>${escapeHTML(log.ip || '—')}</td></tr>`;
+      }).join('')
+      : '<tr><td colspan="5">No hay actividad registrada para esos filtros.</td></tr>';
+  };
+
+  const loadAdminDashboard = async () => {
+    if (state.user?.rol !== 'admin') return;
+    setAdminFeedback('Actualizando información administrativa…');
+    try {
+      const usersQuery = adminQuery({
+        buscar: refs.adminUserSearch.value.trim(),
+        rol: refs.adminUserRole.value,
+        estado: refs.adminUserStatus.value,
+      });
+      const ordersQuery = adminQuery({
+        buscar: refs.adminOrderSearch.value.trim(),
+        estado: refs.adminOrderStatus.value,
+      });
+      const [summary, users, orders, audit] = await Promise.all([
+        adminRequest(`/api/admin/resumen${adminQuery()}`),
+        adminRequest(`/api/admin/usuarios${usersQuery}`),
+        adminRequest(`/api/admin/pedidos${ordersQuery}`),
+        adminRequest(`/api/admin/auditoria${adminQuery()}`),
+      ]);
+      renderAdminSummary(summary);
+      renderAdminUsers(users);
+      renderAdminOrders(orders);
+      renderAdminAudit(audit);
+      setAdminFeedback(`Datos actualizados ${formatAdminDate(summary.actualizado_en)}.`);
+    } catch (error) {
+      if (error.status === 401 || error.status === 403) {
+        setAdminFeedback('Tu cuenta no tiene permisos para consultar este panel.', true);
+        setView('auth');
+        setAuthFeedback('El panel administrativo está reservado para cuentas autorizadas.', true);
+        return;
+      }
+      setAdminFeedback(error.message || 'No fue posible cargar el panel administrativo.', true);
+    }
+  };
+
   const setView = (viewName) => {
+    if (viewName === 'admin' && state.user?.rol !== 'admin') {
+      showToast('Esta sección está disponible únicamente para administradores.');
+      viewName = 'auth';
+    }
     state.view = viewName;
     document.querySelectorAll('.view').forEach((view) => {
       view.hidden = view.id !== `view-${viewName}`;
@@ -179,12 +331,14 @@
       control.classList.toggle('is-active', control.dataset.view === viewName);
     });
     if (viewName === 'catalog' && state.products.length === 0) loadProducts();
+    if (viewName === 'admin') loadAdminDashboard();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const updateSessionUI = () => {
     refs.sessionButton.textContent = state.token ? 'SALIR' : 'MI CUENTA';
     refs.sessionButton.setAttribute('aria-label', state.token ? 'Cerrar sesión' : 'Abrir acceso');
+    refs.adminNav.hidden = !(state.token && state.user?.rol === 'admin');
   };
 
   const productClass = (type) => {
@@ -481,7 +635,9 @@
         body: JSON.stringify({ correo: formData.get('correo'), password: formData.get('password') }),
       });
       state.token = result.token;
+      state.user = result.usuario || null;
       localStorage.setItem(TOKEN_KEY, state.token);
+      if (state.user) localStorage.setItem(USER_KEY, JSON.stringify(state.user));
       updateSessionUI();
       setAuthFeedback('Bienvenido a Wood AI Corporation.');
       showToast('Has iniciado sesión correctamente.');
@@ -533,6 +689,9 @@
     const outcomes = [];
     const approvedIds = [];
     let authenticationFailed = false;
+    const checkoutId = window.crypto?.randomUUID
+      ? window.crypto.randomUUID()
+      : `checkout-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
     refs.checkoutButton.disabled = true;
     refs.checkoutButton.textContent = 'Confirmando tu compra…';
@@ -545,6 +704,7 @@
           body: JSON.stringify({
             producto_id: item.product._id,
             cantidad: item.quantity,
+            checkout_id: checkoutId,
             carrito: snapshot.map((line) => ({
               producto_id: line.product._id,
               cantidad: line.quantity,
@@ -564,7 +724,9 @@
         if (error.status === 401) {
           authenticationFailed = true;
           state.token = null;
+          state.user = null;
           localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(USER_KEY);
           updateSessionUI();
           toggleCart(false);
           setView('auth');
@@ -604,10 +766,17 @@
       if (action === 'refresh-products') loadProducts();
       if (action === 'session') {
         if (state.token) {
+          const tokenToRevoke = state.token;
           state.token = null;
+          state.user = null;
           localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(USER_KEY);
           updateSessionUI();
           showToast('Sesión cerrada.');
+          void apiRequest('/api/auth/logout', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${tokenToRevoke}` },
+          }).catch(() => {});
         } else {
           setView('auth');
         }
@@ -637,6 +806,8 @@
   refs.registerForm.addEventListener('submit', handleRegister);
   refs.checkoutButton.addEventListener('click', handleCheckout);
   refs.invoicePrint.addEventListener('click', printInvoice);
+  refs.adminRefresh.addEventListener('click', loadAdminDashboard);
+  refs.adminApplyFilters.addEventListener('click', loadAdminDashboard);
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && state.invoice) closeInvoice();
   });

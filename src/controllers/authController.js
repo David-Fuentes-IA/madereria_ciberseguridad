@@ -1,7 +1,10 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 
 const Usuario = require('../models/Usuario');
+const Sesion = require('../models/Sesion');
+const { JWT_SECRET, SESSION_TTL_SECONDS } = require('../config/auth');
 const { simularEnvioOTP } = require('../utils/mailer');
 
 const registro = async (req, res) => {
@@ -18,6 +21,9 @@ const registro = async (req, res) => {
     const usuario = await Usuario.create({
       correo,
       password_hash,
+      rol: 'cliente',
+      estado: 'activo',
+      fecha_alta: new Date(),
     });
 
     await simularEnvioOTP(correo);
@@ -62,15 +68,43 @@ const login = async (req, res) => {
       });
     }
 
+    if (usuario.estado === 'inactivo') {
+      return res.status(403).json({
+        mensaje: 'La cuenta está inactiva.',
+      });
+    }
+
+    const fechaExpiracion = new Date(Date.now() + SESSION_TTL_SECONDS * 1000);
+    const sesion = await Sesion.create({
+      usuario_id: usuario._id,
+      token_hash: 'pending',
+      ip: req.ip,
+      user_agent: req.get('user-agent'),
+      fecha_expiracion: fechaExpiracion,
+    });
+
     const token = jwt.sign(
       {
         _id: usuario._id,
         rol: usuario.rol,
+        sid: String(sesion._id),
       },
-      'mi_clave_super_secreta_de_desarrollo_123',
+      JWT_SECRET,
+      { expiresIn: SESSION_TTL_SECONDS },
     );
 
-    return res.status(200).json({ token });
+    sesion.token_hash = crypto.createHash('sha256').update(token).digest('hex');
+    await sesion.save();
+
+    return res.status(200).json({
+      token,
+      usuario: {
+        _id: usuario._id,
+        correo: usuario.correo,
+        rol: usuario.rol,
+      },
+      expira_en: fechaExpiracion,
+    });
   } catch (error) {
     console.error(`Error en login: ${error.message}`);
     return res.status(500).json({
@@ -79,7 +113,23 @@ const login = async (req, res) => {
   }
 };
 
+const cerrarSesion = async (req, res) => {
+  try {
+    if (req.usuario?.sid) {
+      await Sesion.findByIdAndUpdate(req.usuario.sid, {
+        fecha_revocacion: new Date(),
+      });
+    }
+
+    return res.status(200).json({ mensaje: 'Sesión cerrada correctamente.' });
+  } catch (error) {
+    console.error(`Error al cerrar sesión: ${error.message}`);
+    return res.status(500).json({ mensaje: 'Error interno del servidor.' });
+  }
+};
+
 module.exports = {
   registro,
   login,
+  cerrarSesion,
 };

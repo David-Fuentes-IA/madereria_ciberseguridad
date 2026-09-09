@@ -1,4 +1,6 @@
+const bcrypt = require('bcryptjs');
 const Producto = require('../models/Producto');
+const Usuario = require('../models/Usuario');
 
 const productosIniciales = [
   {
@@ -178,8 +180,47 @@ const inicializarCatalogo = async () => {
   return totalCatalogo;
 };
 
-module.exports = {
-  inicializarCatalogo,
-  productosIniciales,
+const inicializarAdministrador = async () => {
+  const correo = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+  const password = String(process.env.ADMIN_PASSWORD || '');
+
+  if (!correo && !password) {
+    console.log('Bootstrap de administrador omitido: define ADMIN_EMAIL y ADMIN_PASSWORD para habilitarlo.');
+    return null;
+  }
+
+  if (!correo || !password) {
+    throw new Error('ADMIN_EMAIL y ADMIN_PASSWORD deben definirse juntos para crear el administrador inicial.');
+  }
+
+  if (password.length < 12) {
+    throw new Error('ADMIN_PASSWORD debe tener al menos 12 caracteres.');
+  }
+
+  const usuarioExistente = await Usuario.findOne({ correo });
+  if (usuarioExistente) {
+    if (usuarioExistente.rol !== 'admin') {
+      throw new Error('ADMIN_EMAIL ya pertenece a un usuario que no es administrador. No se elevarán privilegios automáticamente.');
+    }
+    console.log(`Administrador inicial disponible: ${correo}`);
+    return usuarioExistente;
+  }
+
+  const password_hash = await bcrypt.hash(password, 10);
+  const administrador = await Usuario.create({
+    correo,
+    password_hash,
+    rol: 'admin',
+    estado: 'activo',
+    fecha_alta: new Date(),
+  });
+
+  console.log(`Administrador inicial creado: ${administrador.correo}`);
+  return administrador;
 };
 
+module.exports = {
+  inicializarCatalogo,
+  inicializarAdministrador,
+  productosIniciales,
+};
