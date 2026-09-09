@@ -778,6 +778,54 @@ h2 {
   background: linear-gradient(110deg, #120b0a 0%, #3f221b 42%, #8e5a3d 63%, #1d0e0b 100%);
 }
 
+.product-visual.is-roble {
+  background: linear-gradient(110deg, #29140e 0%, #7a3f1e 38%, #c1874f 58%, #4b2113 100%);
+}
+
+.product-visual.is-caoba {
+  background: linear-gradient(110deg, #260b10 0%, #76232c 42%, #ba5548 63%, #3a0e16 100%);
+}
+
+.product-visual.is-encino {
+  background: linear-gradient(110deg, #3d2712 0%, #a97631 44%, #d6aa60 64%, #563217 100%);
+}
+
+.product-visual.is-teca {
+  background: linear-gradient(110deg, #4b2710 0%, #b6752d 42%, #e0ae55 64%, #603314 100%);
+}
+
+.product-visual.is-fresno {
+  background: linear-gradient(110deg, #4a392b 0%, #bea687 44%, #e2ceb0 64%, #72563e 100%);
+}
+
+.product-visual.is-olmo {
+  background: linear-gradient(110deg, #252313 0%, #686539 43%, #9e9956 63%, #333116 100%);
+}
+
+.product-visual.is-cerezo {
+  background: linear-gradient(110deg, #391116 0%, #9a3441 43%, #d16c60 63%, #4c151c 100%);
+}
+
+.product-visual.is-maple {
+  background: linear-gradient(110deg, #66503b 0%, #d1b28a 45%, #f0d9b0 65%, #997656 100%);
+}
+
+.product-visual.is-abedul {
+  background: linear-gradient(110deg, #515056 0%, #b8b4a8 44%, #e2ded2 65%, #77736f 100%);
+}
+
+.product-visual.is-haya {
+  background: linear-gradient(110deg, #5f3c36 0%, #c58b7d 44%, #e7b5a4 64%, #7c4a3d 100%);
+}
+
+.product-visual.is-ebano {
+  background: linear-gradient(110deg, #060606 0%, #1d1a1a 43%, #4b3b35 63%, #090909 100%);
+}
+
+.product-visual.is-wengue {
+  background: linear-gradient(110deg, #0c080c 0%, #2c1c2b 43%, #644050 63%, #120a12 100%);
+}
+
 .visual-meta,
 .visual-index {
   position: absolute;

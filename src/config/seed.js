@@ -1,0 +1,185 @@
+const Producto = require('../models/Producto');
+
+const productosIniciales = [
+  {
+    tipo_madera: 'Roble',
+    marca: 'M/S Reserva',
+    color: 'Miel tostada',
+    textura: 'Veta abierta',
+    dimensiones: '2.40 × 0.30 × 0.025 m',
+    precio: 500,
+    existencia: 20,
+    estado: 'activo',
+  },
+  {
+    tipo_madera: 'Pino',
+    marca: 'Línea Norte',
+    color: 'Marfil cálido',
+    textura: 'Veta suave',
+    dimensiones: '2.40 × 0.20 × 0.025 m',
+    precio: 280,
+    existencia: 35,
+    estado: 'activo',
+  },
+  {
+    tipo_madera: 'Cedro',
+    marca: 'Aurora Wood',
+    color: 'Rojo mineral',
+    textura: 'Veta lineal',
+    dimensiones: '2.40 × 0.25 × 0.025 m',
+    precio: 640,
+    existencia: 12,
+    estado: 'activo',
+  },
+  {
+    tipo_madera: 'Caoba',
+    marca: 'Reserva Imperial',
+    color: 'Castaño rojizo',
+    textura: 'Veta entrelazada',
+    dimensiones: '2.10 × 0.30 × 0.030 m',
+    precio: 1250,
+    existencia: 9,
+    estado: 'activo',
+  },
+  {
+    tipo_madera: 'Nogal',
+    marca: 'Dark Grain',
+    color: 'Café profundo',
+    textura: 'Veta fina',
+    dimensiones: '2.10 × 0.25 × 0.025 m',
+    precio: 980,
+    existencia: 7,
+    estado: 'activo',
+  },
+  {
+    tipo_madera: 'Encino',
+    marca: 'M/S Estructural',
+    color: 'Arena dorada',
+    textura: 'Poros marcados',
+    dimensiones: '2.40 × 0.30 × 0.030 m',
+    precio: 560,
+    existencia: 18,
+    estado: 'activo',
+  },
+  {
+    tipo_madera: 'Teca',
+    marca: 'Monzón Select',
+    color: 'Miel ámbar',
+    textura: 'Veta aceitosa',
+    dimensiones: '2.10 × 0.20 × 0.025 m',
+    precio: 1450,
+    existencia: 6,
+    estado: 'activo',
+  },
+  {
+    tipo_madera: 'Fresno',
+    marca: 'Lumen Grain',
+    color: 'Blanco ceniza',
+    textura: 'Veta elástica',
+    dimensiones: '2.40 × 0.25 × 0.025 m',
+    precio: 720,
+    existencia: 10,
+    estado: 'activo',
+  },
+  {
+    tipo_madera: 'Olmo',
+    marca: 'Río Antiguo',
+    color: 'Oliva humo',
+    textura: 'Veta ondulada',
+    dimensiones: '2.10 × 0.30 × 0.030 m',
+    precio: 880,
+    existencia: 8,
+    estado: 'activo',
+  },
+  {
+    tipo_madera: 'Cerezo',
+    marca: 'Cherry Core',
+    color: 'Rojo cereza',
+    textura: 'Veta satinada',
+    dimensiones: '2.10 × 0.20 × 0.025 m',
+    precio: 1160,
+    existencia: 5,
+    estado: 'activo',
+  },
+  {
+    tipo_madera: 'Maple',
+    marca: 'North Clear',
+    color: 'Crema pálido',
+    textura: 'Veta limpia',
+    dimensiones: '2.40 × 0.25 × 0.025 m',
+    precio: 890,
+    existencia: 14,
+    estado: 'activo',
+  },
+  {
+    tipo_madera: 'Abedul',
+    marca: 'Polar Layer',
+    color: 'Blanco natural',
+    textura: 'Veta uniforme',
+    dimensiones: '2.40 × 0.20 × 0.018 m',
+    precio: 610,
+    existencia: 16,
+    estado: 'activo',
+  },
+  {
+    tipo_madera: 'Haya',
+    marca: 'Europa Solid',
+    color: 'Rosado claro',
+    textura: 'Veta compacta',
+    dimensiones: '2.10 × 0.25 × 0.025 m',
+    precio: 690,
+    existencia: 11,
+    estado: 'activo',
+  },
+  {
+    tipo_madera: 'Ébano',
+    marca: 'Obsidian Select',
+    color: 'Negro carbón',
+    textura: 'Veta cerrada',
+    dimensiones: '1.80 × 0.15 × 0.020 m',
+    precio: 2400,
+    existencia: 3,
+    estado: 'activo',
+  },
+  {
+    tipo_madera: 'Wengué',
+    marca: 'Darkline Premium',
+    color: 'Chocolate oscuro',
+    textura: 'Veta contrastada',
+    dimensiones: '2.10 × 0.20 × 0.025 m',
+    precio: 1780,
+    existencia: 4,
+    estado: 'activo',
+  },
+];
+
+const inicializarCatalogo = async () => {
+  const operaciones = productosIniciales.map((producto) => {
+    const { existencia, ...datosCatalogo } = producto;
+
+    return {
+      updateOne: {
+        filter: { tipo_madera: producto.tipo_madera },
+        update: {
+          $set: datosCatalogo,
+          $setOnInsert: { existencia },
+        },
+        upsert: true,
+      },
+    };
+  });
+
+  await Producto.bulkWrite(operaciones);
+
+  const tipos = productosIniciales.map(({ tipo_madera }) => tipo_madera);
+  const totalCatalogo = await Producto.countDocuments({ tipo_madera: { $in: tipos } });
+  console.log(`Catálogo inicial sincronizado: ${totalCatalogo}/${productosIniciales.length} productos.`);
+
+  return totalCatalogo;
+};
+
+module.exports = {
+  inicializarCatalogo,
+  productosIniciales,
+};
+

@@ -19,6 +19,7 @@
     sessionButton: document.getElementById('session-button'),
     productGrid: document.getElementById('product-grid'),
     catalogNotice: document.getElementById('catalog-notice'),
+    catalogCount: document.getElementById('catalog-count'),
     cartCount: document.getElementById('cart-count'),
     cartDrawer: document.getElementById('cart-drawer'),
     drawerBackdrop: document.getElementById('drawer-backdrop'),
@@ -78,6 +79,39 @@
       precio: 640,
       existencia: 4,
       estado: 'activo',
+    },
+    {
+      _id: 'demo-caoba', tipo_madera: 'Caoba', marca: 'Reserva Imperial', color: 'Castaño rojizo', textura: 'Veta entrelazada', dimensiones: '2.10 × 0.30 m', precio: 1250, existencia: 9, estado: 'activo',
+    },
+    {
+      _id: 'demo-encino', tipo_madera: 'Encino', marca: 'M/S Estructural', color: 'Arena dorada', textura: 'Poros marcados', dimensiones: '2.40 × 0.30 m', precio: 560, existencia: 18, estado: 'activo',
+    },
+    {
+      _id: 'demo-teca', tipo_madera: 'Teca', marca: 'Monzón Select', color: 'Miel ámbar', textura: 'Veta aceitosa', dimensiones: '2.10 × 0.20 m', precio: 1450, existencia: 6, estado: 'activo',
+    },
+    {
+      _id: 'demo-fresno', tipo_madera: 'Fresno', marca: 'Lumen Grain', color: 'Blanco ceniza', textura: 'Veta elástica', dimensiones: '2.40 × 0.25 m', precio: 720, existencia: 10, estado: 'activo',
+    },
+    {
+      _id: 'demo-olmo', tipo_madera: 'Olmo', marca: 'Río Antiguo', color: 'Oliva humo', textura: 'Veta ondulada', dimensiones: '2.10 × 0.30 m', precio: 880, existencia: 8, estado: 'activo',
+    },
+    {
+      _id: 'demo-cerezo', tipo_madera: 'Cerezo', marca: 'Cherry Core', color: 'Rojo cereza', textura: 'Veta satinada', dimensiones: '2.10 × 0.20 m', precio: 1160, existencia: 5, estado: 'activo',
+    },
+    {
+      _id: 'demo-maple', tipo_madera: 'Maple', marca: 'North Clear', color: 'Crema pálido', textura: 'Veta limpia', dimensiones: '2.40 × 0.25 m', precio: 890, existencia: 14, estado: 'activo',
+    },
+    {
+      _id: 'demo-abedul', tipo_madera: 'Abedul', marca: 'Polar Layer', color: 'Blanco natural', textura: 'Veta uniforme', dimensiones: '2.40 × 0.20 m', precio: 610, existencia: 16, estado: 'activo',
+    },
+    {
+      _id: 'demo-haya', tipo_madera: 'Haya', marca: 'Europa Solid', color: 'Rosado claro', textura: 'Veta compacta', dimensiones: '2.10 × 0.25 m', precio: 690, existencia: 11, estado: 'activo',
+    },
+    {
+      _id: 'demo-ebano', tipo_madera: 'Ébano', marca: 'Obsidian Select', color: 'Negro carbón', textura: 'Veta cerrada', dimensiones: '1.80 × 0.15 m', precio: 2400, existencia: 3, estado: 'activo',
+    },
+    {
+      _id: 'demo-wengue', tipo_madera: 'Wengué', marca: 'Darkline Premium', color: 'Chocolate oscuro', textura: 'Veta contrastada', dimensiones: '2.10 × 0.20 m', precio: 1780, existencia: 4, estado: 'activo',
     },
   ];
 
@@ -153,11 +187,12 @@
   };
 
   const productClass = (type) => {
-    const normalized = String(type || '').toLowerCase();
-    if (normalized.includes('pino')) return 'is-pino';
-    if (normalized.includes('cedro')) return 'is-cedro';
-    if (normalized.includes('nogal')) return 'is-nogal';
-    return '';
+    const normalized = String(type || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+    const woodClasses = ['roble', 'pino', 'cedro', 'caoba', 'nogal', 'encino', 'teca', 'fresno', 'olmo', 'cerezo', 'maple', 'abedul', 'haya', 'ebano', 'wengue'];
+    return woodClasses.includes(normalized) ? `is-${normalized}` : '';
   };
 
   const productState = (stock) => {
@@ -167,6 +202,7 @@
   };
 
   const renderProducts = () => {
+    refs.catalogCount.textContent = `${state.products.length} ${state.products.length === 1 ? 'MATERIAL' : 'MATERIALES'}`;
     if (!state.products.length) {
       refs.productGrid.innerHTML = '<div class="empty-catalog">No hay materia disponible en el inventario.</div>';
       return;
@@ -207,6 +243,7 @@
     try {
       const products = await apiRequest('/api/productos');
       state.products = Array.isArray(products) ? products : [];
+      refs.catalogNotice.className = 'catalog-notice';
       setApiStatus('API ONLINE');
       renderProducts();
     } catch (error) {
@@ -315,7 +352,6 @@
       invoice.total,
       invoice.totales?.total,
       sale.total,
-      primary.total,
       primary.total_venta,
     );
     const computedTotal = snapshot.reduce((sum, item) => sum + (Number(item.product.precio) || 0) * item.quantity, 0);

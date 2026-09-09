@@ -8,7 +8,7 @@ const authRoutes = require('./src/routes/authRoutes');
 const contratoRoutes = require('./src/routes/contratoRoutes');
 const pagoRoutes = require('./src/routes/pagoRoutes');
 const productoRoutes = require('./src/routes/productoRoutes');
-const Producto = require('./src/models/Producto');
+const { inicializarCatalogo } = require('./src/config/seed');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,18 +34,7 @@ app.get('/health', (_req, res) => {
 const startServer = async () => {
   try {
     await connectDB();
-
-    const cantidadProductos = await Producto.countDocuments();
-
-    if (cantidadProductos === 0) {
-      await Producto.create({
-        tipo_madera: 'Roble',
-        precio: 500,
-        existencia: 20,
-        estado: 'activo',
-      });
-      console.log('Producto de prueba insertado correctamente.');
-    }
+    await inicializarCatalogo();
 
     app.listen(PORT, () => {
       console.log(`Madereria Secure API escuchando en http://localhost:${PORT}`);
