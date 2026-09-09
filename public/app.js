@@ -11,6 +11,7 @@
     authMode: 'login',
     token: localStorage.getItem(TOKEN_KEY),
     toastTimer: null,
+    invoice: null,
   };
 
   const refs = {
@@ -24,6 +25,20 @@
     cartItems: document.getElementById('cart-items'),
     cartTotal: document.getElementById('cart-total'),
     checkoutButton: document.getElementById('checkout-button'),
+    invoiceModal: document.getElementById('invoice-modal'),
+    invoiceBackdrop: document.getElementById('invoice-backdrop'),
+    invoiceStatusRow: document.querySelector('.invoice-status-row'),
+    invoiceStatusMark: document.getElementById('invoice-status-mark'),
+    invoiceStatus: document.getElementById('invoice-status'),
+    invoiceStatusDetail: document.getElementById('invoice-status-detail'),
+    invoiceFolio: document.getElementById('invoice-folio'),
+    invoiceDate: document.getElementById('invoice-date'),
+    invoiceItemCount: document.getElementById('invoice-item-count'),
+    invoiceLines: document.getElementById('invoice-lines'),
+    invoiceTotal: document.getElementById('invoice-total'),
+    invoiceProofDetail: document.getElementById('invoice-proof-detail'),
+    invoiceServerData: document.getElementById('invoice-server-data'),
+    invoiceFinalize: document.getElementById('invoice-finalize'),
     toast: document.getElementById('toast'),
     loginForm: document.getElementById('login-form'),
     registerForm: document.getElementById('register-form'),
@@ -263,6 +278,142 @@
     setAuthFeedback('');
   };
 
+  const firstDefined = (...values) => values.find((value) => value !== undefined && value !== null && value !== '');
+
+  const paymentState = (payload) => {
+    const rawState = firstDefined(
+      payload?.estado,
+      payload?.estado_pago,
+      payload?.estado_operacion,
+      payload?.status,
+      payload?.resultado,
+      '',
+    );
+    const normalized = String(rawState).toLowerCase();
+    return normalized.includes('aprob') || normalized === 'approved' ? 'Aprobado' : 'Rechazado';
+  };
+
+  const formatInvoiceDate = (value) => {
+    const date = value ? new Date(value) : new Date();
+    if (Number.isNaN(date.getTime())) return 'FECHA NO DISPONIBLE';
+    return new Intl.DateTimeFormat('es-MX', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(date);
+  };
+
+  const buildInvoice = (snapshot, outcomes, approvedIds) => {
+    const payloads = outcomes.map((outcome) => outcome.response).filter(Boolean);
+    const primary = payloads[0] || {};
+    const invoice = primary.factura || primary.factura_digital || primary.invoice || primary.comprobante || {};
+    const sale = primary.venta || primary.sale || {};
+    const transactionIds = outcomes
+      .map((outcome) => firstDefined(outcome.response?.transaccion_id, outcome.response?.transaction_id, outcome.response?.id_transaccion, outcome.transactionId))
+      .filter(Boolean)
+      .map(String);
+    const serverTotal = firstDefined(
+      invoice.total,
+      invoice.totales?.total,
+      sale.total,
+      primary.total,
+      primary.total_venta,
+    );
+    const computedTotal = snapshot.reduce((sum, item) => sum + (Number(item.product.precio) || 0) * item.quantity, 0);
+    const approvedCount = outcomes.filter((outcome) => outcome.estado === 'Aprobado').length;
+    const rejectedCount = outcomes.length - approvedCount;
+    const status = rejectedCount === 0 ? 'APROBADO' : approvedCount ? 'PARCIAL' : 'RECHAZADO';
+    const evidence = firstDefined(invoice.hash, invoice.firma, primary.hash, primary.firma);
+
+    return {
+      snapshot,
+      outcomes,
+      approvedIds,
+      status,
+      folio: firstDefined(
+        invoice.folio,
+        invoice.folio_id,
+        sale.folio,
+        primary.folio,
+        transactionIds[0],
+        `OP-${Date.now().toString(36).toUpperCase()}`,
+      ),
+      date: firstDefined(invoice.fecha, invoice.fecha_utc, sale.fecha, primary.fecha, primary.fecha_utc, new Date().toISOString()),
+      total: serverTotal !== undefined ? Number(serverTotal) || 0 : computedTotal,
+      transactionIds,
+      evidence,
+    };
+  };
+
+  const renderInvoice = (invoice) => {
+    const isApproved = invoice.status === 'APROBADO';
+    const isPartial = invoice.status === 'PARCIAL';
+    const statusText = isApproved ? 'OPERACIÓN APROBADA' : isPartial ? 'OPERACIÓN PARCIAL' : 'OPERACIÓN RECHAZADA';
+    const statusDetail = isApproved
+      ? 'Transacción procesada por el núcleo interno.'
+      : isPartial
+        ? 'Algunas líneas fueron procesadas; las rechazadas permanecen en el carrito.'
+        : 'El servidor rechazó la operación. No se retiró inventario para las líneas rechazadas.';
+
+    refs.invoiceStatusRow.classList.toggle('is-rejected', !isApproved);
+    refs.invoiceStatusRow.classList.toggle('is-partial', isPartial);
+    refs.invoiceStatusMark.classList.toggle('is-rejected', !isApproved);
+    refs.invoiceStatusMark.classList.toggle('is-partial', isPartial);
+    refs.invoiceStatusMark.textContent = isApproved ? '✓' : isPartial ? '!' : '×';
+    refs.invoiceStatus.textContent = statusText;
+    refs.invoiceStatusDetail.textContent = statusDetail;
+    refs.invoiceFolio.textContent = String(invoice.folio);
+    refs.invoiceDate.textContent = formatInvoiceDate(invoice.date);
+    refs.invoiceItemCount.textContent = `${invoice.snapshot.length} ${invoice.snapshot.length === 1 ? 'LÍNEA' : 'LÍNEAS'}`;
+    refs.invoiceTotal.textContent = formatCurrency(invoice.total);
+    refs.invoiceProofDetail.textContent = invoice.transactionIds.length
+      ? `${invoice.transactionIds.length} evidencia(s) de auditoría asociada(s) a esta operación.`
+      : 'El intento fue consignado en la bitácora append-only.';
+
+    refs.invoiceLines.innerHTML = invoice.outcomes.map((outcome) => {
+      const product = outcome.item.product;
+      const lineTotal = (Number(product.precio) || 0) * outcome.item.quantity;
+      const rejected = outcome.estado !== 'Aprobado';
+      const lineDetail = outcome.error ? ` · ${escapeHTML(outcome.error)}` : '';
+      return `
+        <div class="invoice-line">
+          <div><strong>${escapeHTML(product.tipo_madera || 'Materia')}</strong><small>${escapeHTML(product.dimensiones || 'Especificación no informada')} · ${escapeHTML(product.marca || 'Maderería Secure')}</small><span class="invoice-line-state ${rejected ? 'is-rejected' : ''}">${rejected ? `RECHAZADA${lineDetail}` : 'APROBADA / REGISTRADA'}</span></div>
+          <span>${outcome.item.quantity} und.</span>
+          <span>${formatCurrency(lineTotal)}</span>
+        </div>`;
+    }).join('');
+
+    const serverValues = [];
+    if (invoice.transactionIds.length) serverValues.push(`<div><span>TRANSACCIONES</span><strong>${escapeHTML(invoice.transactionIds.join(' · '))}</strong></div>`);
+    if (invoice.evidence) serverValues.push(`<div><span>EVIDENCIA DEVUELTA</span><strong>${escapeHTML(String(invoice.evidence).slice(0, 28))}${String(invoice.evidence).length > 28 ? '…' : ''}</strong></div>`);
+    serverValues.push(`<div><span>RESPUESTAS CHECKOUT</span><strong>${invoice.outcomes.length} / API INTERNA</strong></div>`);
+    refs.invoiceServerData.innerHTML = serverValues.join('');
+  };
+
+  const openInvoice = (invoice) => {
+    state.invoice = invoice;
+    renderInvoice(invoice);
+    toggleCart(false);
+    refs.invoiceBackdrop.hidden = false;
+    refs.invoiceModal.hidden = false;
+    refs.invoiceModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('invoice-open');
+    window.requestAnimationFrame(() => refs.invoiceFinalize.focus());
+  };
+
+  const closeInvoice = () => {
+    if (!state.invoice) return;
+    const approvedIds = new Set(state.invoice.approvedIds.map(String));
+    state.cart = state.cart.filter((item) => !approvedIds.has(String(item.product._id)));
+    state.invoice = null;
+    refs.invoiceModal.hidden = true;
+    refs.invoiceBackdrop.hidden = true;
+    refs.invoiceModal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('invoice-open');
+    renderCart();
+    renderProducts();
+    showToast('Comprobante cerrado. El carrito fue actualizado.');
+  };
+
   const handleLogin = async (event) => {
     event.preventDefault();
     const formData = new FormData(refs.loginForm);
@@ -320,27 +471,43 @@
       return;
     }
 
+    const snapshot = state.cart.map((item) => ({
+      product: { ...item.product },
+      quantity: item.quantity,
+    }));
+    const outcomes = [];
+    const approvedIds = [];
+    let authenticationFailed = false;
+
     refs.checkoutButton.disabled = true;
     refs.checkoutButton.textContent = 'Procesando…';
-    let approved = 0;
-    let rejected = 0;
 
-    for (const item of [...state.cart]) {
+    for (const item of snapshot) {
       try {
         const result = await apiRequest('/api/pagos/checkout', {
           method: 'POST',
           headers: { Authorization: `Bearer ${state.token}` },
-          body: JSON.stringify({ producto_id: item.product._id, cantidad: item.quantity }),
+          body: JSON.stringify({
+            producto_id: item.product._id,
+            cantidad: item.quantity,
+            carrito: snapshot.map((line) => ({
+              producto_id: line.product._id,
+              cantidad: line.quantity,
+            })),
+          }),
         });
-        if (result.estado === 'Aprobado') {
-          item.product.existencia = Math.max(0, Number(item.product.existencia) - item.quantity);
-          state.cart = state.cart.filter((candidate) => candidate !== item);
-          approved += 1;
+        const estado = paymentState(result);
+        outcomes.push({ item, estado, response: result });
+        if (estado === 'Aprobado') {
+          approvedIds.push(String(item.product._id));
+          const liveProduct = state.products.find((product) => String(product._id) === String(item.product._id));
+          if (liveProduct) liveProduct.existencia = Math.max(0, Number(liveProduct.existencia) - item.quantity);
         } else {
-          rejected += 1;
+          outcomes[outcomes.length - 1].error = result.mensaje || 'El servidor rechazó la operación.';
         }
       } catch (error) {
         if (error.status === 401) {
+          authenticationFailed = true;
           state.token = null;
           localStorage.removeItem(TOKEN_KEY);
           updateSessionUI();
@@ -349,18 +516,14 @@
           setAuthFeedback('La sesión fue rechazada por la API. Vuelve a autenticarte.', true);
           break;
         }
-        showToast(error.message || 'La operación no pudo completarse.');
-        rejected += 1;
+        outcomes.push({ item, estado: 'Rechazado', error: error.message || 'La API rechazó la transacción.' });
       }
     }
 
-    renderCart();
-    renderProducts();
     refs.checkoutButton.disabled = false;
     refs.checkoutButton.innerHTML = 'Simular pago <span aria-hidden="true">↗</span>';
-    if (approved && rejected) showToast(`${approved} operación(es) aprobada(s), ${rejected} rechazada(s).`);
-    else if (approved) showToast('Pago aprobado y registrado en auditoría.');
-    else if (rejected) showToast('Pago rechazado. El stock permanece intacto.');
+    renderProducts();
+    if (!authenticationFailed && outcomes.length) openInvoice(buildInvoice(snapshot, outcomes, approvedIds));
   };
 
   document.addEventListener('click', (event) => {
@@ -382,6 +545,7 @@
       const { action } = actionControl.dataset;
       if (action === 'toggle-cart') toggleCart(true);
       if (action === 'close-cart') toggleCart(false);
+      if (action === 'close-invoice') closeInvoice();
       if (action === 'refresh-products') loadProducts();
       if (action === 'session') {
         if (state.token) {
@@ -417,6 +581,9 @@
   refs.loginForm.addEventListener('submit', handleLogin);
   refs.registerForm.addEventListener('submit', handleRegister);
   refs.checkoutButton.addEventListener('click', handleCheckout);
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && state.invoice) closeInvoice();
+  });
 
   const canvas = document.getElementById('neural-canvas');
   const context = canvas.getContext('2d');

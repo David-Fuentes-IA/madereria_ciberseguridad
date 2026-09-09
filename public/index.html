@@ -187,6 +187,55 @@
       </div>
     </aside>
 
+    <div class="invoice-backdrop" id="invoice-backdrop" data-action="close-invoice" hidden></div>
+    <section class="invoice-modal" id="invoice-modal" role="dialog" aria-modal="true" aria-labelledby="invoice-title" aria-hidden="true" hidden>
+      <div class="invoice-shell">
+        <div class="invoice-corner invoice-corner-a" aria-hidden="true"></div>
+        <div class="invoice-corner invoice-corner-b" aria-hidden="true"></div>
+        <header class="invoice-head">
+          <div>
+            <span class="panel-kicker">COMPROBANTE / INTERNAL LEDGER</span>
+            <h2 id="invoice-title">Factura digital</h2>
+          </div>
+          <button class="close-button" type="button" aria-label="Cerrar comprobante" data-action="close-invoice">×</button>
+        </header>
+
+        <div class="invoice-status-row">
+          <span class="invoice-status-mark" id="invoice-status-mark">✓</span>
+          <div>
+            <strong id="invoice-status">OPERACIÓN APROBADA</strong>
+            <small id="invoice-status-detail">Transacción procesada por el núcleo interno.</small>
+          </div>
+        </div>
+
+        <div class="invoice-meta-grid">
+          <div><span>FOLIO / TRANSACCIÓN</span><strong id="invoice-folio">—</strong></div>
+          <div><span>FECHA DE OPERACIÓN</span><strong id="invoice-date">—</strong></div>
+          <div><span>PROCESAMIENTO</span><strong>INTERNO / API</strong></div>
+          <div><span>TRAZABILIDAD</span><strong class="trace-active">● ACTIVA</strong></div>
+        </div>
+
+        <div class="invoice-divider"><span>DETALLE DE MATERIA</span><i></i><span id="invoice-item-count">0 LÍNEAS</span></div>
+        <div class="invoice-lines" id="invoice-lines"></div>
+
+        <div class="invoice-total-row">
+          <div><span>TOTAL DE OPERACIÓN</span><small>Impuestos y cargos según respuesta del servidor</small></div>
+          <strong id="invoice-total">$0.00</strong>
+        </div>
+
+        <div class="invoice-proof">
+          <div class="proof-icon">⌁</div>
+          <div><strong>REGISTRO DE NO REPUDIO</strong><span id="invoice-proof-detail">El intento fue consignado en la bitácora append-only.</span></div>
+        </div>
+        <div class="invoice-server-data" id="invoice-server-data" aria-live="polite"></div>
+
+        <div class="invoice-actions">
+          <button class="btn btn-primary btn-block" type="button" id="invoice-finalize" data-action="close-invoice">Finalizar y cerrar comprobante <span aria-hidden="true">↗</span></button>
+          <p>Al cerrar, las líneas aprobadas se retirarán del carrito local. Las rechazadas permanecerán disponibles para reintento.</p>
+        </div>
+      </div>
+    </section>
+
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script>
