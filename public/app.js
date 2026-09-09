@@ -144,7 +144,7 @@
     if (!response.ok) {
       const message = typeof payload === 'object' && payload?.mensaje
         ? payload.mensaje
-        : `La API respondió ${response.status}.`;
+        : `El servicio respondió ${response.status}.`;
       const error = new Error(message);
       error.status = response.status;
       throw error;
@@ -183,7 +183,7 @@
   };
 
   const updateSessionUI = () => {
-    refs.sessionButton.textContent = state.token ? 'SALIR' : 'ACCESO';
+    refs.sessionButton.textContent = state.token ? 'SALIR' : 'MI CUENTA';
     refs.sessionButton.setAttribute('aria-label', state.token ? 'Cerrar sesión' : 'Abrir acceso');
   };
 
@@ -198,14 +198,14 @@
 
   const productState = (stock) => {
     if (stock <= 0) return { label: 'AGOTADO', className: 'is-empty' };
-    if (stock <= 5) return { label: `${stock} EN STOCK`, className: 'is-low' };
-    return { label: `${stock} EN STOCK`, className: '' };
+    if (stock <= 5) return { label: `${stock} DISPONIBLES`, className: 'is-low' };
+    return { label: `${stock} DISPONIBLES`, className: '' };
   };
 
   const renderProducts = () => {
-    refs.catalogCount.textContent = `${state.products.length} ${state.products.length === 1 ? 'MATERIAL' : 'MATERIALES'}`;
+    refs.catalogCount.textContent = `${state.products.length} ${state.products.length === 1 ? 'PRODUCTO' : 'PRODUCTOS'}`;
     if (!state.products.length) {
-      refs.productGrid.innerHTML = '<div class="empty-catalog">No hay materia disponible en el inventario.</div>';
+      refs.productGrid.innerHTML = '<div class="empty-catalog">En este momento no hay maderas disponibles.</div>';
       return;
     }
 
@@ -216,22 +216,22 @@
       return `
         <article class="product-card">
           <div class="product-visual ${productClass(product.tipo_madera)}" role="img" aria-label="Textura representativa de ${escapeHTML(product.tipo_madera || 'madera')}">
-            <span class="visual-meta">GRAIN / ${String(index + 1).padStart(2, '0')}</span>
-            <span class="visual-index">M/S ${String(index + 1).padStart(2, '0')}</span>
+            <span class="visual-meta">TEXTURA / ${String(index + 1).padStart(2, '0')}</span>
+            <span class="visual-index">WA / ${String(index + 1).padStart(2, '0')}</span>
           </div>
           <div class="product-content">
             <div class="product-title-row">
-              <h3>${escapeHTML(product.tipo_madera || 'Materia')}</h3>
+              <h3>${escapeHTML(product.tipo_madera || 'Madera')}</h3>
               <span class="product-state ${status.className}">${status.label}</span>
             </div>
-            <p class="product-brand">${escapeHTML(product.marca || 'Maderería Secure')}</p>
+            <p class="product-brand">${escapeHTML(product.marca || 'Wood AI Corporation')}</p>
             <div class="product-spec-row">
-              <div class="product-spec"><span>Color / textura</span><strong>${escapeHTML(product.color || '—')} · ${escapeHTML(product.textura || '—')}</strong></div>
-              <div class="product-spec"><span>Dimensiones</span><strong>${escapeHTML(product.dimensiones || '—')}</strong></div>
+              <div class="product-spec"><span>Color / acabado</span><strong>${escapeHTML(product.color || '—')} · ${escapeHTML(product.textura || '—')}</strong></div>
+              <div class="product-spec"><span>Medidas</span><strong>${escapeHTML(product.dimensiones || '—')}</strong></div>
             </div>
             <div class="product-footer">
               <div class="product-price">${formatCurrency(product.precio)} <small>MXN</small></div>
-              <button class="product-add" type="button" data-add-product="${escapeHTML(product._id)}" ${disabled}>Agregar +</button>
+              <button class="product-add" type="button" data-add-product="${escapeHTML(product._id)}" ${disabled}>Agregar al carrito</button>
             </div>
           </div>
         </article>`;
@@ -239,19 +239,19 @@
   };
 
   const loadProducts = async () => {
-    refs.productGrid.innerHTML = '<div class="loading-state"><span class="loader"></span> Consultando inventario...</div>';
+    refs.productGrid.innerHTML = '<div class="loading-state"><span class="loader"></span> Cargando nuestras maderas...</div>';
     refs.catalogNotice.textContent = '';
     try {
       const products = await apiRequest('/api/productos');
       state.products = Array.isArray(products) ? products : [];
       refs.catalogNotice.className = 'catalog-notice';
-      setApiStatus('API ONLINE');
+      setApiStatus('SERVICIO EN LÍNEA');
       renderProducts();
     } catch (error) {
       state.products = demoProducts;
-      refs.catalogNotice.textContent = 'MODO DEMO / API NO DISPONIBLE — los pagos requieren conexión activa.';
+      refs.catalogNotice.textContent = 'MODO DEMO / catálogo temporal — conecta el servicio para confirmar compras.';
       refs.catalogNotice.className = 'catalog-notice is-demo';
-      setApiStatus('API OFFLINE', true);
+      setApiStatus('SERVICIO SIN CONEXIÓN', true);
       renderProducts();
     }
   };
@@ -260,12 +260,12 @@
     const existing = state.cart.find((item) => item.product._id === product._id);
     if (existing) {
       if (existing.quantity < Number(product.existencia)) existing.quantity += 1;
-      else return showToast('Límite de existencia alcanzado para esta materia.');
+      else return showToast('Ya alcanzaste la cantidad disponible de esta madera.');
     } else {
       state.cart.push({ product, quantity: 1 });
     }
     renderCart();
-    showToast(`${product.tipo_madera || 'Materia'} añadido a la operación.`);
+    showToast(`${product.tipo_madera || 'Madera'} se agregó a tu carrito.`);
   };
 
   const renderCart = () => {
@@ -275,7 +275,7 @@
     refs.cartTotal.textContent = formatCurrency(total);
 
     if (!state.cart.length) {
-      refs.cartItems.innerHTML = '<div class="empty-cart"><span class="empty-glyph">∅</span><strong>Sin elementos en cola</strong><small>Selecciona una materia del catálogo para iniciar.</small></div>';
+      refs.cartItems.innerHTML = '<div class="empty-cart"><span class="empty-glyph">∅</span><strong>Tu carrito está vacío</strong><small>Explora el catálogo y agrega la madera ideal para tu proyecto.</small></div>';
       return;
     }
 
@@ -283,14 +283,14 @@
       <div class="cart-line">
         <div class="cart-line-visual ${productClass(item.product.tipo_madera)}"></div>
         <div class="cart-line-info">
-          <strong>${escapeHTML(item.product.tipo_madera || 'Materia')}</strong>
+          <strong>${escapeHTML(item.product.tipo_madera || 'Madera')}</strong>
           <small>${formatCurrency(item.product.precio)} / unidad</small>
           <div class="cart-quantity">
-            <button type="button" aria-label="Reducir cantidad" data-cart-action="decrease" data-product-id="${escapeHTML(item.product._id)}">−</button>
+            <button type="button" aria-label="Disminuir cantidad" data-cart-action="decrease" data-product-id="${escapeHTML(item.product._id)}">−</button>
             <span>${item.quantity}</span>
             <button type="button" aria-label="Aumentar cantidad" data-cart-action="increase" data-product-id="${escapeHTML(item.product._id)}">+</button>
           </div>
-          <button class="remove-line" type="button" data-cart-action="remove" data-product-id="${escapeHTML(item.product._id)}">Retirar</button>
+          <button class="remove-line" type="button" data-cart-action="remove" data-product-id="${escapeHTML(item.product._id)}">Quitar</button>
         </div>
         <div class="cart-line-price">${formatCurrency((Number(item.product.precio) || 0) * item.quantity)}</div>
       </div>`).join('');
@@ -384,12 +384,12 @@
   const renderInvoice = (invoice) => {
     const isApproved = invoice.status === 'APROBADO';
     const isPartial = invoice.status === 'PARCIAL';
-    const statusText = isApproved ? 'OPERACIÓN APROBADA' : isPartial ? 'OPERACIÓN PARCIAL' : 'OPERACIÓN RECHAZADA';
+    const statusText = isApproved ? 'COMPRA CONFIRMADA' : isPartial ? 'COMPRA PARCIAL' : 'COMPRA NO COMPLETADA';
     const statusDetail = isApproved
-      ? 'Transacción procesada por el núcleo interno.'
+      ? 'Tu pedido fue registrado correctamente.'
       : isPartial
-        ? 'Algunas líneas fueron procesadas; las rechazadas permanecen en el carrito.'
-        : 'El servidor rechazó la operación. No se retiró inventario para las líneas rechazadas.';
+        ? 'Algunos productos fueron confirmados; los demás permanecen en tu carrito.'
+        : 'No fue posible completar esta compra. Tus productos permanecen en el carrito.';
 
     refs.invoiceStatusRow.classList.toggle('is-rejected', !isApproved);
     refs.invoiceStatusRow.classList.toggle('is-partial', isPartial);
@@ -400,11 +400,11 @@
     refs.invoiceStatusDetail.textContent = statusDetail;
     refs.invoiceFolio.textContent = String(invoice.folio);
     refs.invoiceDate.textContent = formatInvoiceDate(invoice.date);
-    refs.invoiceItemCount.textContent = `${invoice.snapshot.length} ${invoice.snapshot.length === 1 ? 'LÍNEA' : 'LÍNEAS'}`;
+    refs.invoiceItemCount.textContent = `${invoice.snapshot.length} ${invoice.snapshot.length === 1 ? 'PRODUCTO' : 'PRODUCTOS'}`;
     refs.invoiceTotal.textContent = formatCurrency(invoice.total);
     refs.invoiceProofDetail.textContent = invoice.transactionIds.length
-      ? `${invoice.transactionIds.length} evidencia(s) de auditoría asociada(s) a esta operación.`
-      : 'El intento fue consignado en la bitácora append-only.';
+      ? `${invoice.transactionIds.length} respaldo(s) digital(es) asociado(s) a tu compra.`
+      : 'Tu compra cuenta con un registro verificable para mayor tranquilidad.';
 
     refs.invoiceLines.innerHTML = invoice.outcomes.map((outcome) => {
       const product = outcome.item.product;
@@ -413,16 +413,16 @@
       const lineDetail = outcome.error ? ` · ${escapeHTML(outcome.error)}` : '';
       return `
         <div class="invoice-line">
-          <div><strong>${escapeHTML(product.tipo_madera || 'Materia')}</strong><small>${escapeHTML(product.dimensiones || 'Especificación no informada')} · ${escapeHTML(product.marca || 'Maderería Secure')}</small><span class="invoice-line-state ${rejected ? 'is-rejected' : ''}">${rejected ? `RECHAZADA${lineDetail}` : 'APROBADA / REGISTRADA'}</span></div>
+          <div><strong>${escapeHTML(product.tipo_madera || 'Madera')}</strong><small>${escapeHTML(product.dimensiones || 'Medidas no informadas')} · ${escapeHTML(product.marca || 'Wood AI Corporation')}</small><span class="invoice-line-state ${rejected ? 'is-rejected' : ''}">${rejected ? `NO DISPONIBLE${lineDetail}` : 'CONFIRMADA / REGISTRADA'}</span></div>
           <span>${outcome.item.quantity} und.</span>
           <span>${formatCurrency(lineTotal)}</span>
         </div>`;
     }).join('');
 
     const serverValues = [];
-    if (invoice.transactionIds.length) serverValues.push(`<div><span>TRANSACCIONES</span><strong>${escapeHTML(invoice.transactionIds.join(' · '))}</strong></div>`);
-    if (invoice.evidence) serverValues.push(`<div><span>EVIDENCIA DEVUELTA</span><strong>${escapeHTML(String(invoice.evidence).slice(0, 28))}${String(invoice.evidence).length > 28 ? '…' : ''}</strong></div>`);
-    serverValues.push(`<div><span>RESPUESTAS CHECKOUT</span><strong>${invoice.outcomes.length}</strong></div>`);
+    if (invoice.transactionIds.length) serverValues.push(`<div><span>REFERENCIAS</span><strong>${escapeHTML(invoice.transactionIds.join(' · '))}</strong></div>`);
+    if (invoice.evidence) serverValues.push(`<div><span>RESPALDO DIGITAL</span><strong>${escapeHTML(String(invoice.evidence).slice(0, 28))}${String(invoice.evidence).length > 28 ? '…' : ''}</strong></div>`);
+    serverValues.push(`<div><span>LÍNEAS PROCESADAS</span><strong>${invoice.outcomes.length}</strong></div>`);
     refs.invoiceServerData.innerHTML = serverValues.join('');
   };
 
@@ -450,7 +450,7 @@
     document.body.classList.remove('invoice-open');
     renderCart();
     renderProducts();
-    showToast('Comprobante cerrado. El carrito fue actualizado.');
+    showToast('Compra finalizada. Tu carrito fue actualizado.');
   };
 
   const printInvoice = () => {
@@ -474,7 +474,7 @@
     const formData = new FormData(refs.loginForm);
     const submitButton = refs.loginForm.querySelector('button[type="submit"]');
     submitButton.disabled = true;
-    setAuthFeedback('Validando identidad…');
+    setAuthFeedback('Verificando tus datos…');
     try {
       const result = await apiRequest('/api/auth/login', {
         method: 'POST',
@@ -483,11 +483,11 @@
       state.token = result.token;
       localStorage.setItem(TOKEN_KEY, state.token);
       updateSessionUI();
-      setAuthFeedback('Acceso autorizado.');
-      showToast('Sesión segura iniciada.');
+      setAuthFeedback('Bienvenido a Wood AI Corporation.');
+      showToast('Has iniciado sesión correctamente.');
       window.setTimeout(() => setView('catalog'), 350);
     } catch (error) {
-      setAuthFeedback(error.message || 'No fue posible autorizar el acceso.', true);
+      setAuthFeedback(error.message || 'No fue posible iniciar sesión.', true);
     } finally {
       submitButton.disabled = false;
     }
@@ -498,7 +498,7 @@
     const formData = new FormData(refs.registerForm);
     const submitButton = refs.registerForm.querySelector('button[type="submit"]');
     submitButton.disabled = true;
-    setAuthFeedback('Generando identidad y código OTP…');
+    setAuthFeedback('Preparando tu cuenta…');
     try {
       const result = await apiRequest('/api/auth/registro', {
         method: 'POST',
@@ -507,10 +507,10 @@
       refs.loginForm.elements.correo.value = formData.get('correo');
       refs.registerForm.reset();
       setAuthMode('login');
-      setAuthFeedback(result.mensaje || 'Registro creado. Revisa la consola del servidor para el OTP.');
-      showToast('Identidad creada. Ya puedes iniciar sesión.');
+      setAuthFeedback(result.mensaje || 'Tu cuenta fue creada. Ya puedes iniciar sesión.');
+      showToast('Cuenta creada. Te damos la bienvenida.');
     } catch (error) {
-      setAuthFeedback(error.message || 'No fue posible crear la identidad.', true);
+      setAuthFeedback(error.message || 'No fue posible crear tu cuenta.', true);
     } finally {
       submitButton.disabled = false;
     }
@@ -522,7 +522,7 @@
       toggleCart(false);
       setView('auth');
       setAuthMode('login');
-      setAuthFeedback('Inicia sesión para ejecutar una operación segura.', true);
+      setAuthFeedback('Inicia sesión para continuar con tu compra.', true);
       return;
     }
 
@@ -535,7 +535,7 @@
     let authenticationFailed = false;
 
     refs.checkoutButton.disabled = true;
-    refs.checkoutButton.textContent = 'Procesando…';
+    refs.checkoutButton.textContent = 'Confirmando tu compra…';
 
     for (const item of snapshot) {
       try {
@@ -558,7 +558,7 @@
           const liveProduct = state.products.find((product) => String(product._id) === String(item.product._id));
           if (liveProduct) liveProduct.existencia = Math.max(0, Number(liveProduct.existencia) - item.quantity);
         } else {
-          outcomes[outcomes.length - 1].error = result.mensaje || 'El servidor rechazó la operación.';
+          outcomes[outcomes.length - 1].error = result.mensaje || 'No fue posible confirmar esta línea.';
         }
       } catch (error) {
         if (error.status === 401) {
@@ -568,15 +568,15 @@
           updateSessionUI();
           toggleCart(false);
           setView('auth');
-          setAuthFeedback('La sesión fue rechazada por la API. Vuelve a autenticarte.', true);
+          setAuthFeedback('Tu sesión terminó. Inicia sesión nuevamente para continuar.', true);
           break;
         }
-        outcomes.push({ item, estado: 'Rechazado', error: error.message || 'La API rechazó la transacción.' });
+        outcomes.push({ item, estado: 'Rechazado', error: error.message || 'No fue posible confirmar esta compra.' });
       }
     }
 
     refs.checkoutButton.disabled = false;
-    refs.checkoutButton.innerHTML = 'Simular pago <span aria-hidden="true">↗</span>';
+    refs.checkoutButton.innerHTML = 'Continuar con la compra <span aria-hidden="true">↗</span>';
     renderProducts();
     if (!authenticationFailed && outcomes.length) openInvoice(buildInvoice(snapshot, outcomes, approvedIds));
   };
