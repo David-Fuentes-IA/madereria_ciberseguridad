@@ -422,7 +422,7 @@
     const serverValues = [];
     if (invoice.transactionIds.length) serverValues.push(`<div><span>TRANSACCIONES</span><strong>${escapeHTML(invoice.transactionIds.join(' · '))}</strong></div>`);
     if (invoice.evidence) serverValues.push(`<div><span>EVIDENCIA DEVUELTA</span><strong>${escapeHTML(String(invoice.evidence).slice(0, 28))}${String(invoice.evidence).length > 28 ? '…' : ''}</strong></div>`);
-    serverValues.push(`<div><span>RESPUESTAS CHECKOUT</span><strong>${invoice.outcomes.length} / API INTERNA</strong></div>`);
+    serverValues.push(`<div><span>RESPUESTAS CHECKOUT</span><strong>${invoice.outcomes.length}</strong></div>`);
     refs.invoiceServerData.innerHTML = serverValues.join('');
   };
 
@@ -440,7 +440,9 @@
   const closeInvoice = () => {
     if (!state.invoice) return;
     const approvedIds = new Set(state.invoice.approvedIds.map(String));
-    state.cart = state.cart.filter((item) => !approvedIds.has(String(item.product._id)));
+    state.cart = state.invoice.status === 'APROBADO'
+      ? []
+      : state.cart.filter((item) => !approvedIds.has(String(item.product._id)));
     state.invoice = null;
     refs.invoiceModal.hidden = true;
     refs.invoiceBackdrop.hidden = true;
