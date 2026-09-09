@@ -1851,6 +1851,112 @@ h2 {
   }
 }
 
+@media print {
+  @page {
+    margin: 14mm;
+    size: A4;
+  }
+
+  html,
+  body {
+    min-width: 0;
+    background: #ffffff !important;
+    color: #111111 !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  #invoice-modal,
+  #invoice-modal * {
+    visibility: visible !important;
+  }
+
+  #neural-canvas,
+  .noise-layer,
+  .app-shell,
+  .invoice-backdrop,
+  .invoice-corner,
+  .invoice-actions,
+  .close-button,
+  .toast {
+    display: none !important;
+  }
+
+  #invoice-modal {
+    position: static !important;
+    display: block !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+
+  .invoice-shell {
+    width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 20px !important;
+    border: 1px solid #191919 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    color: #111111 !important;
+  }
+
+  .invoice-head,
+  .invoice-meta-grid,
+  .invoice-line,
+  .invoice-total-row {
+    border-color: #c9c9c9 !important;
+  }
+
+  .invoice-head h2,
+  .invoice-line strong,
+  .invoice-total-row > strong {
+    color: #111111 !important;
+  }
+
+  .panel-kicker,
+  .invoice-meta-grid span,
+  .invoice-divider,
+  .invoice-total-row span,
+  .invoice-proof strong,
+  .invoice-server-data span,
+  .invoice-line small,
+  .invoice-total-row small {
+    color: #555555 !important;
+  }
+
+  .invoice-meta-grid strong,
+  .invoice-line,
+  .invoice-proof span,
+  .invoice-server-data strong {
+    color: #222222 !important;
+  }
+
+  .invoice-status-row strong,
+  .invoice-status-mark,
+  .invoice-meta-grid .trace-active,
+  .invoice-line-state,
+  .invoice-proof,
+  .proof-icon {
+    border-color: #16705d !important;
+    color: #16705d !important;
+    box-shadow: none !important;
+  }
+
+  .invoice-line-state.is-rejected,
+  .invoice-status-row.is-rejected strong,
+  .invoice-status-mark.is-rejected {
+    border-color: #9d1c2c !important;
+    color: #9d1c2c !important;
+  }
+
+  .invoice-proof {
+    background: #f2faf7 !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1899,5 +2005,17 @@ h2 {
   .invoice-proof span {
     font-size: 9px;
     line-height: 1.45;
+  }
+}
+
+@media print {
+  .invoice-modal {
+    padding: 0 !important;
+  }
+
+  .invoice-shell {
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 20px !important;
   }
 }

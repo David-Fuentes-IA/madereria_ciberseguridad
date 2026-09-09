@@ -39,6 +39,7 @@
     invoiceTotal: document.getElementById('invoice-total'),
     invoiceProofDetail: document.getElementById('invoice-proof-detail'),
     invoiceServerData: document.getElementById('invoice-server-data'),
+    invoicePrint: document.getElementById('invoice-print'),
     invoiceFinalize: document.getElementById('invoice-finalize'),
     toast: document.getElementById('toast'),
     loginForm: document.getElementById('login-form'),
@@ -450,6 +451,22 @@
     showToast('Comprobante cerrado. El carrito fue actualizado.');
   };
 
+  const printInvoice = () => {
+    if (!state.invoice) return;
+
+    const originalTitle = document.title;
+    const folio = String(state.invoice.folio).replace(/[^a-z0-9-_]/gi, '-');
+    document.title = `Factura-${folio}`;
+
+    const restoreTitle = () => {
+      document.title = originalTitle;
+      window.removeEventListener('afterprint', restoreTitle);
+    };
+
+    window.addEventListener('afterprint', restoreTitle);
+    window.print();
+  };
+
   const handleLogin = async (event) => {
     event.preventDefault();
     const formData = new FormData(refs.loginForm);
@@ -617,6 +634,7 @@
   refs.loginForm.addEventListener('submit', handleLogin);
   refs.registerForm.addEventListener('submit', handleRegister);
   refs.checkoutButton.addEventListener('click', handleCheckout);
+  refs.invoicePrint.addEventListener('click', printInvoice);
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && state.invoice) closeInvoice();
   });
