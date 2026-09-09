@@ -14,16 +14,25 @@ const procesarPago = async (req, res) => {
 
     const producto = await Producto.findById(producto_id);
 
-    if (!producto || cantidadNumerica > producto.existencia) {
+    const tieneExistenciaLimitada =
+      producto &&
+      producto.existencia !== null &&
+      producto.existencia !== undefined &&
+      Number.isFinite(Number(producto.existencia));
+
+    if (
+      !producto ||
+      (tieneExistenciaLimitada &&
+        cantidadNumerica > Number(producto.existencia))
+    ) {
       return res.status(400).json({
         mensaje: 'Stock insuficiente',
       });
     }
 
-    const resultadoPasarela = Math.random();
-    const estadoDelPago = resultadoPasarela > 0.2 ? 'Aprobado' : 'Rechazado';
+    const estadoDelPago = 'Aprobado';
 
-    if (estadoDelPago === 'Aprobado') {
+    if (tieneExistenciaLimitada) {
       const productoActualizado = await Producto.findOneAndUpdate(
         {
           _id: producto_id,
