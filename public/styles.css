@@ -1,20 +1,21 @@
 :root {
-  --bg: #050506;
-  --surface: rgba(14, 15, 18, 0.88);
-  --surface-solid: #0d0e10;
-  --surface-soft: #121318;
-  --line: rgba(255, 255, 255, 0.12);
-  --line-strong: rgba(255, 38, 58, 0.48);
-  --text: #f2f3f5;
-  --muted: #8c9098;
-  --metal: #b9bdc5;
-  --red: #ff2038;
-  --red-bright: #ff5261;
-  --red-dark: #731521;
-  --cyan: #8fffe2;
-  --shadow-red: 0 0 24px rgba(255, 32, 56, 0.3), inset 0 0 22px rgba(255, 32, 56, 0.05);
-  --font-sans: "Space Grotesk", "Segoe UI", sans-serif;
-  --font-mono: "IBM Plex Mono", Consolas, monospace;
+  --bg: #f6faf6;
+  --surface: rgba(255, 255, 255, 0.96);
+  --surface-solid: #ffffff;
+  --surface-soft: #eef4ef;
+  --line: #e2e5e2;
+  --line-strong: rgba(0, 45, 23, 0.24);
+  --text: #222222;
+  --muted: #555a57;
+  --metal: #717972;
+  --red: #8b500c;
+  --red-bright: #b66a1e;
+  --red-dark: #6d3d08;
+  --cyan: #1a8754;
+  --shadow-red: 0 14px 34px rgba(0, 45, 23, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+  --font-sans: "Inter", "Segoe UI", sans-serif;
+  --font-mono: "Inter", "Segoe UI", sans-serif;
+  --font-display: "Montserrat", "Inter", "Segoe UI", sans-serif;
 }
 
 * {
@@ -2017,5 +2018,469 @@ h2 {
     max-height: none !important;
     overflow: visible !important;
     padding: 20px !important;
+  }
+}
+
+/* Corporate timber theme: visual-only overrides for the existing application. */
+@media screen {
+  html {
+    background: var(--bg);
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 84% 12%, rgba(166, 209, 176, 0.24), transparent 28rem),
+      radial-gradient(circle at 8% 80%, rgba(255, 176, 102, 0.1), transparent 26rem),
+      var(--bg);
+    color: var(--text);
+  }
+
+  body::before {
+    background-image: linear-gradient(rgba(0, 45, 23, 0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 45, 23, 0.035) 1px, transparent 1px);
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent 90%);
+  }
+
+  #neural-canvas {
+    opacity: 0.42;
+  }
+
+  .noise-layer {
+    opacity: 0.018;
+    mix-blend-mode: multiply;
+  }
+
+  .topbar {
+    border-bottom-color: rgba(164, 209, 176, 0.36);
+    background: linear-gradient(110deg, #002d17, #1a432b 72%, #31583e);
+    box-shadow: 0 8px 24px rgba(0, 45, 23, 0.12);
+  }
+
+  .brand,
+  .nav-link:hover,
+  .nav-link.is-active {
+    color: #ffffff;
+  }
+
+  .brand-mark {
+    border-color: #ffb066;
+    color: #ffdcc0;
+    box-shadow: 0 0 0 3px rgba(255, 176, 102, 0.12);
+  }
+
+  .brand-copy strong {
+    font-family: var(--font-display);
+    letter-spacing: 0.12em;
+  }
+
+  .brand-copy small {
+    color: #c0edcb;
+  }
+
+  .nav-link,
+  .session-button,
+  .close-button,
+  .auth-tab {
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .nav-link::after {
+    background: #ffb066;
+    box-shadow: 0 0 10px rgba(255, 176, 102, 0.5);
+  }
+
+  .nav-count {
+    border-color: rgba(255, 176, 102, 0.75);
+    color: #ffdcc0;
+  }
+
+  .api-status,
+  .feed-label {
+    color: #c0edcb;
+  }
+
+  .status-dot,
+  .panel-live i {
+    background: #a4d1b0;
+    box-shadow: 0 0 10px rgba(164, 209, 176, 0.68);
+  }
+
+  .api-status.is-error .status-dot {
+    background: #ffb066;
+    box-shadow: 0 0 10px rgba(255, 176, 102, 0.6);
+  }
+
+  .session-button {
+    border-color: rgba(255, 176, 102, 0.78);
+    color: #ffdcc0;
+    box-shadow: inset 0 0 14px rgba(255, 176, 102, 0.08);
+  }
+
+  .session-button:hover {
+    background: rgba(255, 176, 102, 0.14);
+    box-shadow: 0 0 18px rgba(255, 176, 102, 0.18);
+  }
+
+  button:focus-visible,
+  input:focus-visible,
+  a:focus-visible {
+    outline-color: #8b500c;
+  }
+
+  h1,
+  h2,
+  h3,
+  .core-mark {
+    font-family: var(--font-display);
+  }
+
+  h1,
+  h2 {
+    font-weight: 700;
+    letter-spacing: -0.055em;
+  }
+
+  .eyebrow,
+  .accent-slash,
+  .meta-icon,
+  .strip-index,
+  .empty-glyph {
+    color: #8b500c;
+  }
+
+  .eyebrow-line {
+    background: #8b500c;
+    box-shadow: none;
+  }
+
+  .outline-word {
+    -webkit-text-stroke-color: rgba(0, 45, 23, 0.45);
+  }
+
+  .hero-lede,
+  .hero-meta,
+  .auth-intro > p:not(.eyebrow) {
+    color: #555a57;
+  }
+
+  .btn {
+    font-weight: 700;
+  }
+
+  .btn-primary {
+    border-color: #002d17;
+    background: #002d17;
+    color: #ffffff;
+    box-shadow: 0 8px 18px rgba(0, 45, 23, 0.16), inset 0 -8px 20px rgba(0, 0, 0, 0.12);
+  }
+
+  .btn-primary:hover {
+    border-color: #1a432b;
+    background: #1a432b;
+    box-shadow: 0 10px 22px rgba(0, 45, 23, 0.2), inset 0 -8px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-ghost {
+    border-color: #c1c8c0;
+    color: #002d17;
+    background: rgba(255, 255, 255, 0.78);
+  }
+
+  .btn-ghost:hover {
+    border-color: #8b500c;
+    color: #6d3d08;
+    box-shadow: inset 0 0 18px rgba(255, 176, 102, 0.1);
+  }
+
+  .hero-console,
+  .auth-card,
+  .product-card {
+    border-color: #d0d8d0;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(238, 244, 239, 0.96));
+    box-shadow: 0 14px 34px rgba(0, 45, 23, 0.1);
+  }
+
+  .hero-console {
+    border-color: rgba(139, 80, 12, 0.48);
+  }
+
+  .hero-console::before,
+  .hero-console::after,
+  .auth-card::before,
+  .auth-card::after {
+    border-color: #8b500c;
+  }
+
+  .console-topline,
+  .console-readouts,
+  .panel-kicker,
+  .catalog-notice,
+  .footer-bar,
+  .drawer-note {
+    color: #717972;
+  }
+
+  .console-signal i,
+  .orbit::after {
+    background: #8b500c;
+    box-shadow: 0 0 8px rgba(139, 80, 12, 0.45);
+  }
+
+  .console-visual::before,
+  .console-visual::after {
+    border-color: rgba(139, 80, 12, 0.2);
+  }
+
+  .console-visual::after,
+  .orbit-two,
+  .crosshair-b {
+    border-color: rgba(26, 135, 84, 0.24);
+  }
+
+  .orbit {
+    border-color: rgba(139, 80, 12, 0.38);
+  }
+
+  .core-mark {
+    color: #002d17;
+    text-shadow: none;
+  }
+
+  .core-mark span,
+  .console-readouts strong {
+    color: #1a8754;
+  }
+
+  .console-crosshair {
+    border-color: #8b500c;
+  }
+
+  .signal-strip {
+    background: rgba(255, 255, 255, 0.78);
+  }
+
+  .signal-strip strong,
+  .product-title-row h3,
+  .product-price,
+  .product-spec strong,
+  .product-content,
+  .product-card {
+    color: #222222;
+  }
+
+  .signal-strip small,
+  .product-brand,
+  .product-spec span,
+  .product-price small,
+  .product-state,
+  .loading-state,
+  .empty-catalog {
+    color: #555a57;
+  }
+
+  .product-card:hover {
+    border-color: rgba(26, 135, 84, 0.6);
+    box-shadow: 0 14px 34px rgba(0, 45, 23, 0.14);
+  }
+
+  .product-visual::after {
+    border-color: rgba(255, 255, 255, 0.62);
+    box-shadow: 0 0 18px rgba(0, 45, 23, 0.12);
+  }
+
+  .product-state {
+    color: #1a8754;
+  }
+
+  .product-state.is-low {
+    color: #8b500c;
+  }
+
+  .product-state.is-empty,
+  .catalog-notice.is-error,
+  .form-feedback.is-error {
+    color: #ba1a1a;
+  }
+
+  .product-add {
+    border-color: #1a8754;
+    color: #006436;
+  }
+
+  .product-add:hover:not(:disabled) {
+    color: #ffffff;
+    background: #1a8754;
+    box-shadow: 0 8px 18px rgba(26, 135, 84, 0.18);
+  }
+
+  .product-add:disabled {
+    border-color: #c1c8c0;
+    color: #717972;
+  }
+
+  .auth-proof span:nth-child(odd),
+  .panel-live,
+  .form-feedback,
+  .summary-secure,
+  .invoice-status-row strong,
+  .invoice-status-mark,
+  .invoice-meta-grid .trace-active,
+  .invoice-line-state,
+  .invoice-proof strong,
+  .proof-icon {
+    color: #1a8754;
+  }
+
+  .auth-tabs {
+    border-bottom-color: #e2e5e2;
+  }
+
+  .auth-tab,
+  .close-button {
+    color: #555a57;
+  }
+
+  .auth-tab.is-active {
+    color: #222222;
+  }
+
+  .auth-tab.is-active::after {
+    background: #8b500c;
+    box-shadow: none;
+  }
+
+  .auth-form label {
+    color: #555a57;
+  }
+
+  .auth-form input {
+    border-color: #c1c8c0;
+    color: #222222;
+    background: #ffffff;
+  }
+
+  .auth-form input::placeholder {
+    color: #8a918b;
+  }
+
+  .auth-form input:focus {
+    border-color: #1a8754;
+    box-shadow: 0 0 0 3px rgba(26, 135, 84, 0.12);
+  }
+
+  .footer-bar {
+    border-top-color: #d7ded7;
+  }
+
+  .drawer-backdrop,
+  .invoice-backdrop {
+    background: rgba(0, 45, 23, 0.38);
+  }
+
+  .cart-drawer,
+  .invoice-shell {
+    border-color: #b9cdbb;
+    background: #ffffff;
+    box-shadow: 0 18px 48px rgba(0, 45, 23, 0.2);
+  }
+
+  .drawer-head,
+  .invoice-head,
+  .invoice-meta-grid {
+    border-color: #e2e5e2;
+  }
+
+  .close-button:hover {
+    color: #8b500c;
+  }
+
+  .empty-cart {
+    border-color: #c1c8c0;
+  }
+
+  .empty-cart strong,
+  .cart-line-info strong,
+  .drawer-summary > div strong,
+  .invoice-head h2,
+  .invoice-line strong,
+  .invoice-total-row > strong {
+    color: #222222;
+  }
+
+  .cart-line-visual {
+    background: linear-gradient(135deg, #725034, #d2a56c 58%, #496b4e);
+    box-shadow: inset 0 0 14px rgba(0, 45, 23, 0.16);
+  }
+
+  .cart-quantity button {
+    border-color: #c1c8c0;
+    color: #555a57;
+  }
+
+  .cart-quantity button:hover,
+  .remove-line:hover {
+    border-color: #1a8754;
+    color: #1a8754;
+  }
+
+  .invoice-shell {
+    background: linear-gradient(145deg, #ffffff, #f0f6f1 72%);
+  }
+
+  .invoice-corner {
+    border-color: #8b500c;
+  }
+
+  .invoice-status-mark {
+    border-color: #1a8754;
+    box-shadow: 0 0 0 4px rgba(26, 135, 84, 0.1);
+  }
+
+  .invoice-status-mark.is-rejected,
+  .invoice-status-mark.is-partial,
+  .invoice-status-row.is-rejected strong,
+  .invoice-status-row.is-partial strong,
+  .invoice-line-state.is-rejected {
+    border-color: #ba1a1a;
+    color: #ba1a1a;
+  }
+
+  .invoice-status-row small,
+  .invoice-meta-grid span,
+  .invoice-divider,
+  .invoice-total-row span,
+  .invoice-proof strong,
+  .invoice-server-data span,
+  .invoice-line small,
+  .invoice-total-row small,
+  .invoice-actions p {
+    color: #717972;
+  }
+
+  .invoice-meta-grid strong,
+  .invoice-line,
+  .invoice-proof span,
+  .invoice-server-data strong {
+    color: #555a57;
+  }
+
+  .invoice-proof {
+    border-color: rgba(26, 135, 84, 0.25);
+    background: rgba(192, 237, 203, 0.3);
+  }
+
+  .proof-icon {
+    border-color: #1a8754;
+  }
+
+  .invoice-actions {
+    border-top: 1px solid #e2e5e2;
+    padding-top: 18px;
+  }
+
+  .toast {
+    border-color: #1a8754;
+    color: #222222;
+    background: #ffffff;
+    box-shadow: 0 12px 28px rgba(0, 45, 23, 0.16);
   }
 }

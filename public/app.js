@@ -692,7 +692,7 @@
           context.beginPath();
           context.moveTo(node.x, node.y);
           context.lineTo(other.x, other.y);
-          context.strokeStyle = pointerBoost ? `rgba(255, 45, 64, ${alpha})` : `rgba(180, 58, 68, ${alpha})`;
+          context.strokeStyle = pointerBoost ? `rgba(26, 135, 84, ${alpha})` : `rgba(139, 80, 12, ${alpha})`;
           context.lineWidth = pointerBoost ? 1 : 0.55;
           context.stroke();
         }
@@ -701,10 +701,10 @@
       context.beginPath();
       context.arc(node.x, node.y, Math.max(0.4, pulse), 0, Math.PI * 2);
       context.fillStyle = pointer.active && Math.hypot(node.x - pointer.x, node.y - pointer.y) < 160
-        ? 'rgba(255, 95, 108, 0.95)'
-        : 'rgba(255, 42, 61, 0.6)';
+        ? 'rgba(26, 135, 84, 0.95)'
+        : 'rgba(139, 80, 12, 0.6)';
       context.shadowBlur = pointer.active && Math.hypot(node.x - pointer.x, node.y - pointer.y) < 160 ? 12 : 5;
-      context.shadowColor = 'rgba(255, 32, 56, 0.8)';
+      context.shadowColor = 'rgba(26, 135, 84, 0.8)';
       context.fill();
       context.shadowBlur = 0;
     });
