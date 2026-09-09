@@ -1,0 +1,507 @@
+(() => {
+  'use strict';
+
+  const API_BASE = String(window.MADERERIA_API_BASE || '').replace(/\/$/, '');
+  const TOKEN_KEY = 'madereria_secure_token';
+
+  const state = {
+    products: [],
+    cart: [],
+    view: 'home',
+    authMode: 'login',
+    token: localStorage.getItem(TOKEN_KEY),
+    toastTimer: null,
+  };
+
+  const refs = {
+    apiStatus: document.getElementById('api-status'),
+    sessionButton: document.getElementById('session-button'),
+    productGrid: document.getElementById('product-grid'),
+    catalogNotice: document.getElementById('catalog-notice'),
+    cartCount: document.getElementById('cart-count'),
+    cartDrawer: document.getElementById('cart-drawer'),
+    drawerBackdrop: document.getElementById('drawer-backdrop'),
+    cartItems: document.getElementById('cart-items'),
+    cartTotal: document.getElementById('cart-total'),
+    checkoutButton: document.getElementById('checkout-button'),
+    toast: document.getElementById('toast'),
+    loginForm: document.getElementById('login-form'),
+    registerForm: document.getElementById('register-form'),
+    authFeedback: document.getElementById('auth-feedback'),
+  };
+
+  const demoProducts = [
+    {
+      _id: 'demo-roble',
+      tipo_madera: 'Roble',
+      marca: 'Maderería Secure',
+      color: 'Miel tostada',
+      textura: 'Veta abierta',
+      dimensiones: '2.40 × 0.30 m',
+      precio: 500,
+      existencia: 20,
+      estado: 'activo',
+    },
+    {
+      _id: 'demo-nogal',
+      tipo_madera: 'Nogal',
+      marca: 'Reserva Norte',
+      color: 'Café profundo',
+      textura: 'Veta fina',
+      dimensiones: '2.10 × 0.25 m',
+      precio: 780,
+      existencia: 8,
+      estado: 'activo',
+    },
+    {
+      _id: 'demo-cedro',
+      tipo_madera: 'Cedro',
+      marca: 'Línea Aurora',
+      color: 'Rojo mineral',
+      textura: 'Veta lineal',
+      dimensiones: '2.40 × 0.20 m',
+      precio: 640,
+      existencia: 4,
+      estado: 'activo',
+    },
+  ];
+
+  const escapeHTML = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#39;',
+    '"': '&quot;',
+  }[character]));
+
+  const formatCurrency = (value) => new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: 'MXN',
+    maximumFractionDigits: 2,
+  }).format(Number(value) || 0);
+
+  const apiRequest = async (path, options = {}) => {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    };
+    const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    const contentType = response.headers.get('content-type') || '';
+    const payload = contentType.includes('application/json')
+      ? await response.json()
+      : await response.text();
+
+    if (!response.ok) {
+      const message = typeof payload === 'object' && payload?.mensaje
+        ? payload.mensaje
+        : `La API respondió ${response.status}.`;
+      const error = new Error(message);
+      error.status = response.status;
+      throw error;
+    }
+
+    return payload;
+  };
+
+  const showToast = (message) => {
+    window.clearTimeout(state.toastTimer);
+    refs.toast.textContent = message;
+    refs.toast.classList.add('is-visible');
+    state.toastTimer = window.setTimeout(() => refs.toast.classList.remove('is-visible'), 4200);
+  };
+
+  const setApiStatus = (label, isError = false) => {
+    refs.apiStatus.querySelector('span:last-child').textContent = label;
+    refs.apiStatus.classList.toggle('is-error', isError);
+  };
+
+  const setAuthFeedback = (message = '', isError = false) => {
+    refs.authFeedback.textContent = message;
+    refs.authFeedback.classList.toggle('is-error', isError);
+  };
+
+  const setView = (viewName) => {
+    state.view = viewName;
+    document.querySelectorAll('.view').forEach((view) => {
+      view.hidden = view.id !== `view-${viewName}`;
+    });
+    document.querySelectorAll('[data-view]').forEach((control) => {
+      control.classList.toggle('is-active', control.dataset.view === viewName);
+    });
+    if (viewName === 'catalog' && state.products.length === 0) loadProducts();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const updateSessionUI = () => {
+    refs.sessionButton.textContent = state.token ? 'SALIR' : 'ACCESO';
+    refs.sessionButton.setAttribute('aria-label', state.token ? 'Cerrar sesión' : 'Abrir acceso');
+  };
+
+  const productClass = (type) => {
+    const normalized = String(type || '').toLowerCase();
+    if (normalized.includes('pino')) return 'is-pino';
+    if (normalized.includes('cedro')) return 'is-cedro';
+    if (normalized.includes('nogal')) return 'is-nogal';
+    return '';
+  };
+
+  const productState = (stock) => {
+    if (stock <= 0) return { label: 'AGOTADO', className: 'is-empty' };
+    if (stock <= 5) return { label: `${stock} EN STOCK`, className: 'is-low' };
+    return { label: `${stock} EN STOCK`, className: '' };
+  };
+
+  const renderProducts = () => {
+    if (!state.products.length) {
+      refs.productGrid.innerHTML = '<div class="empty-catalog">No hay materia disponible en el inventario.</div>';
+      return;
+    }
+
+    refs.productGrid.innerHTML = state.products.map((product, index) => {
+      const stock = Number(product.existencia) || 0;
+      const status = productState(stock);
+      const disabled = stock <= 0 ? 'disabled' : '';
+      return `
+        <article class="product-card">
+          <div class="product-visual ${productClass(product.tipo_madera)}" role="img" aria-label="Textura representativa de ${escapeHTML(product.tipo_madera || 'madera')}">
+            <span class="visual-meta">GRAIN / ${String(index + 1).padStart(2, '0')}</span>
+            <span class="visual-index">M/S ${String(index + 1).padStart(2, '0')}</span>
+          </div>
+          <div class="product-content">
+            <div class="product-title-row">
+              <h3>${escapeHTML(product.tipo_madera || 'Materia')}</h3>
+              <span class="product-state ${status.className}">${status.label}</span>
+            </div>
+            <p class="product-brand">${escapeHTML(product.marca || 'Maderería Secure')}</p>
+            <div class="product-spec-row">
+              <div class="product-spec"><span>Color / textura</span><strong>${escapeHTML(product.color || '—')} · ${escapeHTML(product.textura || '—')}</strong></div>
+              <div class="product-spec"><span>Dimensiones</span><strong>${escapeHTML(product.dimensiones || '—')}</strong></div>
+            </div>
+            <div class="product-footer">
+              <div class="product-price">${formatCurrency(product.precio)} <small>MXN</small></div>
+              <button class="product-add" type="button" data-add-product="${escapeHTML(product._id)}" ${disabled}>Agregar +</button>
+            </div>
+          </div>
+        </article>`;
+    }).join('');
+  };
+
+  const loadProducts = async () => {
+    refs.productGrid.innerHTML = '<div class="loading-state"><span class="loader"></span> Consultando inventario...</div>';
+    refs.catalogNotice.textContent = '';
+    try {
+      const products = await apiRequest('/api/productos');
+      state.products = Array.isArray(products) ? products : [];
+      setApiStatus('API ONLINE');
+      renderProducts();
+    } catch (error) {
+      state.products = demoProducts;
+      refs.catalogNotice.textContent = 'MODO DEMO / API NO DISPONIBLE — los pagos requieren conexión activa.';
+      refs.catalogNotice.className = 'catalog-notice is-demo';
+      setApiStatus('API OFFLINE', true);
+      renderProducts();
+    }
+  };
+
+  const addToCart = (product) => {
+    const existing = state.cart.find((item) => item.product._id === product._id);
+    if (existing) {
+      if (existing.quantity < Number(product.existencia)) existing.quantity += 1;
+      else return showToast('Límite de existencia alcanzado para esta materia.');
+    } else {
+      state.cart.push({ product, quantity: 1 });
+    }
+    renderCart();
+    showToast(`${product.tipo_madera || 'Materia'} añadido a la operación.`);
+  };
+
+  const renderCart = () => {
+    const totalItems = state.cart.reduce((sum, item) => sum + item.quantity, 0);
+    const total = state.cart.reduce((sum, item) => sum + (Number(item.product.precio) || 0) * item.quantity, 0);
+    refs.cartCount.textContent = totalItems;
+    refs.cartTotal.textContent = formatCurrency(total);
+
+    if (!state.cart.length) {
+      refs.cartItems.innerHTML = '<div class="empty-cart"><span class="empty-glyph">∅</span><strong>Sin elementos en cola</strong><small>Selecciona una materia del catálogo para iniciar.</small></div>';
+      return;
+    }
+
+    refs.cartItems.innerHTML = state.cart.map((item) => `
+      <div class="cart-line">
+        <div class="cart-line-visual ${productClass(item.product.tipo_madera)}"></div>
+        <div class="cart-line-info">
+          <strong>${escapeHTML(item.product.tipo_madera || 'Materia')}</strong>
+          <small>${formatCurrency(item.product.precio)} / unidad</small>
+          <div class="cart-quantity">
+            <button type="button" aria-label="Reducir cantidad" data-cart-action="decrease" data-product-id="${escapeHTML(item.product._id)}">−</button>
+            <span>${item.quantity}</span>
+            <button type="button" aria-label="Aumentar cantidad" data-cart-action="increase" data-product-id="${escapeHTML(item.product._id)}">+</button>
+          </div>
+          <button class="remove-line" type="button" data-cart-action="remove" data-product-id="${escapeHTML(item.product._id)}">Retirar</button>
+        </div>
+        <div class="cart-line-price">${formatCurrency((Number(item.product.precio) || 0) * item.quantity)}</div>
+      </div>`).join('');
+  };
+
+  const toggleCart = (isOpen) => {
+    refs.cartDrawer.classList.toggle('is-open', isOpen);
+    refs.cartDrawer.setAttribute('aria-hidden', String(!isOpen));
+    refs.drawerBackdrop.hidden = !isOpen;
+    document.body.classList.toggle('drawer-open', isOpen);
+  };
+
+  const setAuthMode = (mode) => {
+    state.authMode = mode;
+    const isLogin = mode === 'login';
+    refs.loginForm.hidden = !isLogin;
+    refs.registerForm.hidden = isLogin;
+    document.querySelectorAll('[data-auth-mode]').forEach((tab) => {
+      const active = tab.dataset.authMode === mode;
+      tab.classList.toggle('is-active', active);
+      tab.setAttribute('aria-selected', String(active));
+    });
+    setAuthFeedback('');
+  };
+
+  const handleLogin = async (event) => {
+    event.preventDefault();
+    const formData = new FormData(refs.loginForm);
+    const submitButton = refs.loginForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    setAuthFeedback('Validando identidad…');
+    try {
+      const result = await apiRequest('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ correo: formData.get('correo'), password: formData.get('password') }),
+      });
+      state.token = result.token;
+      localStorage.setItem(TOKEN_KEY, state.token);
+      updateSessionUI();
+      setAuthFeedback('Acceso autorizado.');
+      showToast('Sesión segura iniciada.');
+      window.setTimeout(() => setView('catalog'), 350);
+    } catch (error) {
+      setAuthFeedback(error.message || 'No fue posible autorizar el acceso.', true);
+    } finally {
+      submitButton.disabled = false;
+    }
+  };
+
+  const handleRegister = async (event) => {
+    event.preventDefault();
+    const formData = new FormData(refs.registerForm);
+    const submitButton = refs.registerForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    setAuthFeedback('Generando identidad y código OTP…');
+    try {
+      const result = await apiRequest('/api/auth/registro', {
+        method: 'POST',
+        body: JSON.stringify({ correo: formData.get('correo'), password: formData.get('password') }),
+      });
+      refs.loginForm.elements.correo.value = formData.get('correo');
+      refs.registerForm.reset();
+      setAuthMode('login');
+      setAuthFeedback(result.mensaje || 'Registro creado. Revisa la consola del servidor para el OTP.');
+      showToast('Identidad creada. Ya puedes iniciar sesión.');
+    } catch (error) {
+      setAuthFeedback(error.message || 'No fue posible crear la identidad.', true);
+    } finally {
+      submitButton.disabled = false;
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (!state.cart.length) return showToast('El carrito está vacío.');
+    if (!state.token) {
+      toggleCart(false);
+      setView('auth');
+      setAuthMode('login');
+      setAuthFeedback('Inicia sesión para ejecutar una operación segura.', true);
+      return;
+    }
+
+    refs.checkoutButton.disabled = true;
+    refs.checkoutButton.textContent = 'Procesando…';
+    let approved = 0;
+    let rejected = 0;
+
+    for (const item of [...state.cart]) {
+      try {
+        const result = await apiRequest('/api/pagos/checkout', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${state.token}` },
+          body: JSON.stringify({ producto_id: item.product._id, cantidad: item.quantity }),
+        });
+        if (result.estado === 'Aprobado') {
+          item.product.existencia = Math.max(0, Number(item.product.existencia) - item.quantity);
+          state.cart = state.cart.filter((candidate) => candidate !== item);
+          approved += 1;
+        } else {
+          rejected += 1;
+        }
+      } catch (error) {
+        if (error.status === 401) {
+          state.token = null;
+          localStorage.removeItem(TOKEN_KEY);
+          updateSessionUI();
+          toggleCart(false);
+          setView('auth');
+          setAuthFeedback('La sesión fue rechazada por la API. Vuelve a autenticarte.', true);
+          break;
+        }
+        showToast(error.message || 'La operación no pudo completarse.');
+        rejected += 1;
+      }
+    }
+
+    renderCart();
+    renderProducts();
+    refs.checkoutButton.disabled = false;
+    refs.checkoutButton.innerHTML = 'Simular pago <span aria-hidden="true">↗</span>';
+    if (approved && rejected) showToast(`${approved} operación(es) aprobada(s), ${rejected} rechazada(s).`);
+    else if (approved) showToast('Pago aprobado y registrado en auditoría.');
+    else if (rejected) showToast('Pago rechazado. El stock permanece intacto.');
+  };
+
+  document.addEventListener('click', (event) => {
+    const viewControl = event.target.closest('[data-view]');
+    if (viewControl) {
+      event.preventDefault();
+      setView(viewControl.dataset.view);
+      return;
+    }
+
+    const authControl = event.target.closest('[data-auth-mode]');
+    if (authControl) {
+      setAuthMode(authControl.dataset.authMode);
+      return;
+    }
+
+    const actionControl = event.target.closest('[data-action]');
+    if (actionControl) {
+      const { action } = actionControl.dataset;
+      if (action === 'toggle-cart') toggleCart(true);
+      if (action === 'close-cart') toggleCart(false);
+      if (action === 'refresh-products') loadProducts();
+      if (action === 'session') {
+        if (state.token) {
+          state.token = null;
+          localStorage.removeItem(TOKEN_KEY);
+          updateSessionUI();
+          showToast('Sesión cerrada.');
+        } else {
+          setView('auth');
+        }
+      }
+      return;
+    }
+
+    const addControl = event.target.closest('[data-add-product]');
+    if (addControl) {
+      const product = state.products.find((item) => String(item._id) === String(addControl.dataset.addProduct));
+      if (product) addToCart(product);
+      return;
+    }
+
+    const cartControl = event.target.closest('[data-cart-action]');
+    if (cartControl) {
+      const item = state.cart.find((candidate) => String(candidate.product._id) === String(cartControl.dataset.productId));
+      if (!item) return;
+      if (cartControl.dataset.cartAction === 'increase' && item.quantity < Number(item.product.existencia)) item.quantity += 1;
+      if (cartControl.dataset.cartAction === 'decrease') item.quantity -= 1;
+      if (cartControl.dataset.cartAction === 'remove' || item.quantity <= 0) state.cart = state.cart.filter((candidate) => candidate !== item);
+      renderCart();
+    }
+  });
+
+  refs.loginForm.addEventListener('submit', handleLogin);
+  refs.registerForm.addEventListener('submit', handleRegister);
+  refs.checkoutButton.addEventListener('click', handleCheckout);
+
+  const canvas = document.getElementById('neural-canvas');
+  const context = canvas.getContext('2d');
+  const pointer = { x: -9999, y: -9999, active: false };
+  let canvasWidth = 0;
+  let canvasHeight = 0;
+  let deviceScale = 1;
+  let nodes = [];
+  let animationFrame;
+
+  const resizeCanvas = () => {
+    deviceScale = Math.min(window.devicePixelRatio || 1, 2);
+    canvasWidth = window.innerWidth;
+    canvasHeight = window.innerHeight;
+    canvas.width = Math.floor(canvasWidth * deviceScale);
+    canvas.height = Math.floor(canvasHeight * deviceScale);
+    canvas.style.width = `${canvasWidth}px`;
+    canvas.style.height = `${canvasHeight}px`;
+    context.setTransform(deviceScale, 0, 0, deviceScale, 0, 0);
+    const count = Math.max(34, Math.min(84, Math.floor(canvasWidth / 17)));
+    nodes = Array.from({ length: count }, () => ({
+      x: Math.random() * canvasWidth,
+      y: Math.random() * canvasHeight,
+      vx: (Math.random() - 0.5) * 0.19,
+      vy: (Math.random() - 0.5) * 0.19,
+      radius: Math.random() * 1.4 + 0.6,
+      pulse: Math.random() * Math.PI * 2,
+    }));
+  };
+
+  const drawNetwork = (time = 0) => {
+    context.clearRect(0, 0, canvasWidth, canvasHeight);
+    nodes.forEach((node) => {
+      node.x += node.vx;
+      node.y += node.vy;
+      node.pulse += 0.018;
+      if (node.x < -20 || node.x > canvasWidth + 20) node.vx *= -1;
+      if (node.y < -20 || node.y > canvasHeight + 20) node.vy *= -1;
+    });
+
+    nodes.forEach((node, index) => {
+      for (let otherIndex = index + 1; otherIndex < nodes.length; otherIndex += 1) {
+        const other = nodes[otherIndex];
+        const dx = node.x - other.x;
+        const dy = node.y - other.y;
+        const distance = Math.hypot(dx, dy);
+        const pointerBoost = pointer.active && Math.min(Math.hypot(node.x - pointer.x, node.y - pointer.y), Math.hypot(other.x - pointer.x, other.y - pointer.y)) < 170;
+        if (distance < (pointerBoost ? 220 : 145)) {
+          const alpha = (1 - distance / (pointerBoost ? 220 : 145)) * (pointerBoost ? 0.42 : 0.18);
+          context.beginPath();
+          context.moveTo(node.x, node.y);
+          context.lineTo(other.x, other.y);
+          context.strokeStyle = pointerBoost ? `rgba(255, 45, 64, ${alpha})` : `rgba(180, 58, 68, ${alpha})`;
+          context.lineWidth = pointerBoost ? 1 : 0.55;
+          context.stroke();
+        }
+      }
+      const pulse = node.radius + Math.sin(node.pulse + time / 900) * 0.35;
+      context.beginPath();
+      context.arc(node.x, node.y, Math.max(0.4, pulse), 0, Math.PI * 2);
+      context.fillStyle = pointer.active && Math.hypot(node.x - pointer.x, node.y - pointer.y) < 160
+        ? 'rgba(255, 95, 108, 0.95)'
+        : 'rgba(255, 42, 61, 0.6)';
+      context.shadowBlur = pointer.active && Math.hypot(node.x - pointer.x, node.y - pointer.y) < 160 ? 12 : 5;
+      context.shadowColor = 'rgba(255, 32, 56, 0.8)';
+      context.fill();
+      context.shadowBlur = 0;
+    });
+    animationFrame = window.requestAnimationFrame(drawNetwork);
+  };
+
+  window.addEventListener('resize', resizeCanvas);
+  window.addEventListener('pointermove', (event) => {
+    pointer.x = event.clientX;
+    pointer.y = event.clientY;
+    pointer.active = true;
+  });
+  window.addEventListener('pointerleave', () => { pointer.active = false; });
+  window.addEventListener('blur', () => { pointer.active = false; });
+
+  resizeCanvas();
+  animationFrame = window.requestAnimationFrame(drawNetwork);
+  void animationFrame;
+
+  updateSessionUI();
+  renderCart();
+  loadProducts();
+})();

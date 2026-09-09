@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#050506" />
+    <meta
+      name="description"
+      content="Maderería Secure — catálogo de madera con trazabilidad criptográfica."
+    />
+    <title>Maderería Secure // Material Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <canvas id="neural-canvas" aria-hidden="true"></canvas>
+    <div class="noise-layer" aria-hidden="true"></div>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" data-view="home" aria-label="Maderería Secure, inicio">
+          <span class="brand-mark" aria-hidden="true">MS</span>
+          <span class="brand-copy">
+            <strong>MADERERÍA</strong>
+            <small>SECURE / MATERIAL INTELLIGENCE</small>
+          </span>
+        </a>
+
+        <nav class="topnav" aria-label="Navegación principal">
+          <button class="nav-link is-active" type="button" data-view="home">NÚCLEO</button>
+          <button class="nav-link" type="button" data-view="catalog">CATÁLOGO</button>
+          <button class="nav-link" type="button" data-action="toggle-cart">
+            OPERACIÓN <span class="nav-count" id="cart-count">0</span>
+          </button>
+        </nav>
+
+        <div class="topbar-actions">
+          <span class="api-status" id="api-status" aria-live="polite">
+            <span class="status-dot"></span>
+            <span>API READY</span>
+          </span>
+          <button class="session-button" id="session-button" type="button" data-action="session">
+            ACCESO
+          </button>
+        </div>
+      </header>
+
+      <main>
+        <section class="view home-view" id="view-home" aria-labelledby="home-title">
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <p class="eyebrow"><span class="eyebrow-line"></span> SUMINISTRO VERIFICABLE / 01</p>
+              <h1 id="home-title">Materia <span class="accent-slash">//</span><br /><span class="outline-word">con evidencia.</span></h1>
+              <p class="hero-lede">
+                Una nueva capa de confianza para la madera: selección precisa, checkout seguro y una huella criptográfica para cada operación.
+              </p>
+              <div class="hero-actions">
+                <button class="btn btn-primary" type="button" data-view="catalog">
+                  Explorar catálogo <span aria-hidden="true">↗</span>
+                </button>
+                <button class="btn btn-ghost" type="button" data-view="auth">Crear identidad</button>
+              </div>
+              <div class="hero-meta" aria-label="Estado del sistema">
+                <span><i class="meta-icon">◈</i> INVENTARIO SINCRONIZADO</span>
+                <span><i class="meta-icon">⌁</i> EVIDENCIA SHA-256</span>
+              </div>
+            </div>
+
+            <div class="hero-console" aria-label="Consola de trazabilidad">
+              <div class="console-topline">
+                <span>LIVE / TRACE CONSOLE</span>
+                <span class="console-signal"><i></i><i></i><i></i></span>
+              </div>
+              <div class="console-visual">
+                <div class="orbit orbit-one"></div>
+                <div class="orbit orbit-two"></div>
+                <div class="core-mark">M<span>/</span>S</div>
+                <div class="console-crosshair crosshair-a"></div>
+                <div class="console-crosshair crosshair-b"></div>
+              </div>
+              <div class="console-readouts">
+                <div><span>NETWORK</span><strong>ACTIVE</strong></div>
+                <div><span>CHAIN</span><strong>SHA-256</strong></div>
+                <div><span>LATENCY</span><strong>12 MS</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="signal-strip" aria-label="Capacidades principales">
+            <article>
+              <span class="strip-index">01</span>
+              <div><strong>Origen claro</strong><small>Especificaciones de material visibles.</small></div>
+            </article>
+            <article>
+              <span class="strip-index">02</span>
+              <div><strong>Checkout trazable</strong><small>Resultado de pago registrado.</small></div>
+            </article>
+            <article>
+              <span class="strip-index">03</span>
+              <div><strong>Evidencia inmutable</strong><small>Cada operación deja una firma.</small></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="view catalog-view" id="view-catalog" aria-labelledby="catalog-title" hidden>
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow"><span class="eyebrow-line"></span> INVENTARIO / LIVE FEED</p>
+              <h2 id="catalog-title">Catálogo <span class="accent-slash">//</span> de materia</h2>
+            </div>
+            <div class="section-tools">
+              <span class="feed-label"><span class="status-dot"></span> SINCRONIZADO</span>
+              <button class="btn btn-ghost btn-compact" type="button" data-action="refresh-products">Actualizar</button>
+            </div>
+          </div>
+          <div class="catalog-notice" id="catalog-notice" role="status" aria-live="polite"></div>
+          <div class="product-grid" id="product-grid" aria-live="polite">
+            <div class="loading-state"><span class="loader"></span> Consultando inventario...</div>
+          </div>
+        </section>
+
+        <section class="view auth-view" id="view-auth" aria-labelledby="auth-title" hidden>
+          <div class="auth-layout">
+            <div class="auth-intro">
+              <p class="eyebrow"><span class="eyebrow-line"></span> IDENTITY GATE / 02</p>
+              <h2 id="auth-title">Entra al<br /><span class="outline-word">circuito seguro.</span></h2>
+              <p>Tu sesión habilita operaciones de checkout y asocia cada intento a una identidad verificable.</p>
+              <div class="auth-proof"><span>JWT AUTH</span><span>·</span><span>RSA EVIDENCE</span><span>·</span><span>ACID READY</span></div>
+            </div>
+
+            <div class="auth-card">
+              <div class="auth-card-head">
+                <span class="panel-kicker">AUTH / NODE 7</span>
+                <span class="panel-live"><i></i> EN LÍNEA</span>
+              </div>
+              <div class="auth-tabs" role="tablist" aria-label="Acceso o registro">
+                <button class="auth-tab is-active" type="button" role="tab" aria-selected="true" data-auth-mode="login">Iniciar sesión</button>
+                <button class="auth-tab" type="button" role="tab" aria-selected="false" data-auth-mode="register">Nuevo registro</button>
+              </div>
+
+              <form class="auth-form" id="login-form">
+                <label for="login-email">Correo de acceso</label>
+                <input id="login-email" name="correo" type="email" autocomplete="email" placeholder="operador@dominio.mx" required />
+                <label for="login-password">Password</label>
+                <input id="login-password" name="password" type="password" autocomplete="current-password" placeholder="••••••••••••" required />
+                <button class="btn btn-primary btn-block" type="submit">Autorizar acceso <span aria-hidden="true">→</span></button>
+              </form>
+
+              <form class="auth-form" id="register-form" hidden>
+                <label for="register-email">Correo de identidad</label>
+                <input id="register-email" name="correo" type="email" autocomplete="email" placeholder="nuevo@dominio.mx" required />
+                <label for="register-password">Password seguro</label>
+                <input id="register-password" name="password" type="password" autocomplete="new-password" minlength="6" placeholder="mínimo 6 caracteres" required />
+                <button class="btn btn-primary btn-block" type="submit">Crear identidad <span aria-hidden="true">→</span></button>
+              </form>
+              <p class="form-feedback" id="auth-feedback" role="alert" aria-live="polite"></p>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer-bar">
+        <span>MADERERÍA SECURE / MATERIAL INTELLIGENCE</span>
+        <span>© 2025 / ALL SYSTEMS NOMINAL</span>
+      </footer>
+    </div>
+
+    <div class="drawer-backdrop" id="drawer-backdrop" data-action="close-cart" hidden></div>
+    <aside class="cart-drawer" id="cart-drawer" aria-label="Carrito de compra" aria-hidden="true">
+      <div class="drawer-head">
+        <div><span class="panel-kicker">OPERACIÓN / 03</span><h2>Tu carrito</h2></div>
+        <button class="close-button" type="button" aria-label="Cerrar carrito" data-action="close-cart">×</button>
+      </div>
+      <div class="cart-items" id="cart-items" aria-live="polite">
+        <div class="empty-cart"><span class="empty-glyph">∅</span><strong>Sin elementos en cola</strong><small>Selecciona una materia del catálogo para iniciar.</small></div>
+      </div>
+      <div class="drawer-summary">
+        <div><span>SUBTOTAL</span><strong id="cart-total">$0.00</strong></div>
+        <div><span>HUELLA</span><strong class="summary-secure">● SEGURA</strong></div>
+        <button class="btn btn-primary btn-block" type="button" id="checkout-button">Simular pago <span aria-hidden="true">↗</span></button>
+        <p class="drawer-note">Cada intento se registra en la bitácora de auditoría.</p>
+      </div>
+    </aside>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      window.MADERERIA_API_BASE = window.MADERERIA_API_BASE || '';
+    </script>
+    <script src="/app.js" defer></script>
+  </body>
+</html>
