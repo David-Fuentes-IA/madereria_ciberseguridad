@@ -158,12 +158,29 @@ const productosIniciales = [
 const inicializarCatalogo = async () => {
   const operaciones = productosIniciales.map((producto) => {
     const { existencia, ...datosCatalogo } = producto;
+    const opciones = {
+      opciones_color: [...new Set([
+        producto.color,
+        `${producto.color} natural`,
+        `${producto.color} mate`,
+      ])],
+      opciones_textura: [...new Set([
+        producto.textura,
+        'Cepillada',
+        'Lijado fino',
+      ])],
+      opciones_dimensiones: [...new Set([
+        producto.dimensiones,
+        producto.dimensiones?.replace('0.30', '0.25'),
+        producto.dimensiones?.replace('0.25', '0.30'),
+      ].filter(Boolean))],
+    };
 
     return {
       updateOne: {
         filter: { tipo_madera: producto.tipo_madera },
         update: {
-          $set: datosCatalogo,
+          $set: { ...datosCatalogo, ...opciones },
           $setOnInsert: { existencia },
         },
         upsert: true,

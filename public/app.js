@@ -33,6 +33,8 @@
     user: readStoredUser() || (initialToken ? decodeTokenUser(initialToken) : null),
     toastTimer: null,
     invoice: null,
+    adminNotificationTimer: null,
+    adminNotificationsSince: null,
   };
 
   const refs = {
@@ -87,6 +89,12 @@
     adminOrderStatus: document.getElementById('admin-order-status'),
     adminOrdersBody: document.getElementById('admin-orders-body'),
     adminAuditBody: document.getElementById('admin-audit-body'),
+    adminNotification: document.getElementById('admin-notification'),
+    adminNotificationText: document.getElementById('admin-notification-text'),
+    paymentAuthModal: document.getElementById('payment-auth-modal'),
+    paymentAuthBackdrop: document.getElementById('payment-auth-backdrop'),
+    paymentAuthForm: document.getElementById('payment-auth-form'),
+    paymentAuthFeedback: document.getElementById('payment-auth-feedback'),
   };
 
   const demoProducts = [
@@ -189,6 +197,7 @@
         : `El servicio respondió ${response.status}.`;
       const error = new Error(message);
       error.status = response.status;
+      error.payload = payload;
       throw error;
     }
 
@@ -318,6 +327,43 @@
     }
   };
 
+  const closeAdminNotification = () => {
+    refs.adminNotification.hidden = true;
+  };
+
+  const showAdminNotification = (purchase) => {
+    refs.adminNotificationText.textContent = `${purchase.cliente || 'Un cliente'} realizó una compra de ${purchase.lineas || 1} línea(s) por ${formatCurrency(purchase.total)} · ${formatAdminDate(purchase.fecha)}.`;
+    refs.adminNotification.hidden = false;
+    window.setTimeout(closeAdminNotification, 8000);
+  };
+
+  const pollAdminNotifications = async () => {
+    if (state.user?.rol !== 'admin' || !state.token || state.view !== 'admin' || document.visibilityState !== 'visible') return;
+
+    const since = state.adminNotificationsSince || new Date().toISOString();
+    try {
+      const payload = await adminRequest(`/api/admin/notificaciones?desde=${encodeURIComponent(since)}`);
+      state.adminNotificationsSince = new Date().toISOString();
+      const notifications = payload.datos || [];
+      if (notifications.length) showAdminNotification(notifications[notifications.length - 1]);
+    } catch (error) {
+      if (error.status === 401 || error.status === 403) stopAdminNotificationPolling();
+    }
+  };
+
+  const startAdminNotificationPolling = () => {
+    if (state.adminNotificationTimer || state.user?.rol !== 'admin' || !state.token) return;
+    state.adminNotificationsSince = new Date().toISOString();
+    state.adminNotificationTimer = window.setInterval(pollAdminNotifications, 8000);
+    void pollAdminNotifications();
+  };
+
+  const stopAdminNotificationPolling = () => {
+    if (state.adminNotificationTimer) window.clearInterval(state.adminNotificationTimer);
+    state.adminNotificationTimer = null;
+    closeAdminNotification();
+  };
+
   const setView = (viewName) => {
     if (viewName === 'admin' && state.user?.rol !== 'admin') {
       showToast('Esta sección está disponible únicamente para administradores.');
@@ -331,7 +377,12 @@
       control.classList.toggle('is-active', control.dataset.view === viewName);
     });
     if (viewName === 'catalog' && state.products.length === 0) loadProducts();
-    if (viewName === 'admin') loadAdminDashboard();
+    if (viewName === 'admin') {
+      loadAdminDashboard();
+      startAdminNotificationPolling();
+    } else {
+      stopAdminNotificationPolling();
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -339,6 +390,7 @@
     refs.sessionButton.textContent = state.token ? 'SALIR' : 'MI CUENTA';
     refs.sessionButton.setAttribute('aria-label', state.token ? 'Cerrar sesión' : 'Abrir acceso');
     refs.adminNav.hidden = !(state.token && state.user?.rol === 'admin');
+    if (!state.token || state.user?.rol !== 'admin') stopAdminNotificationPolling();
   };
 
   const productClass = (type) => {
@@ -354,6 +406,16 @@
     if (stock <= 0) return { label: 'AGOTADO', className: 'is-empty' };
     if (stock <= 5) return { label: `${stock} DISPONIBLES`, className: 'is-low' };
     return { label: `${stock} DISPONIBLES`, className: '' };
+  };
+
+  const productOptionValues = (product, field) => {
+    const configured = Array.isArray(product[`opciones_${field}`]) ? product[`opciones_${field}`] : [];
+    return [...new Set([product[field], ...configured].filter((value) => typeof value === 'string' && value.trim()))];
+  };
+
+  const renderProductOption = (product, field, label) => {
+    const values = productOptionValues(product, field);
+    return `<label class="product-option"><span>${label}</span><select data-product-option="${field}" data-product-id="${escapeHTML(product._id)}">${values.map((value) => `<option value="${escapeHTML(value)}">${escapeHTML(value)}</option>`).join('')}</select></label>`;
   };
 
   const renderProducts = () => {
@@ -383,6 +445,11 @@
               <div class="product-spec"><span>Color / acabado</span><strong>${escapeHTML(product.color || '—')} · ${escapeHTML(product.textura || '—')}</strong></div>
               <div class="product-spec"><span>Medidas</span><strong>${escapeHTML(product.dimensiones || '—')}</strong></div>
             </div>
+            <div class="product-options" aria-label="Personaliza tu selección">
+              ${renderProductOption(product, 'color', 'Color')}
+              ${renderProductOption(product, 'textura', 'Textura')}
+              ${renderProductOption(product, 'dimensiones', 'Medidas')}
+            </div>
             <div class="product-footer">
               <div class="product-price">${formatCurrency(product.precio)} <small>MXN</small></div>
               <button class="product-add" type="button" data-add-product="${escapeHTML(product._id)}" ${disabled}>Agregar al carrito</button>
@@ -410,13 +477,15 @@
     }
   };
 
-  const addToCart = (product) => {
-    const existing = state.cart.find((item) => item.product._id === product._id);
+  const cartItemKey = (item) => `${item.product._id}::${JSON.stringify(item.caracteristicas || {})}`;
+
+  const addToCart = (product, caracteristicas = {}) => {
+    const existing = state.cart.find((item) => cartItemKey(item) === cartItemKey({ product, caracteristicas }));
     if (existing) {
       if (existing.quantity < Number(product.existencia)) existing.quantity += 1;
       else return showToast('Ya alcanzaste la cantidad disponible de esta madera.');
     } else {
-      state.cart.push({ product, quantity: 1 });
+      state.cart.push({ product, caracteristicas, quantity: 1 });
     }
     renderCart();
     showToast(`${product.tipo_madera || 'Madera'} se agregó a tu carrito.`);
@@ -439,12 +508,13 @@
         <div class="cart-line-info">
           <strong>${escapeHTML(item.product.tipo_madera || 'Madera')}</strong>
           <small>${formatCurrency(item.product.precio)} / unidad</small>
+          <small class="cart-line-options">${escapeHTML(Object.values(item.caracteristicas || {}).join(' · ') || 'Selección estándar')}</small>
           <div class="cart-quantity">
-            <button type="button" aria-label="Disminuir cantidad" data-cart-action="decrease" data-product-id="${escapeHTML(item.product._id)}">−</button>
+            <button type="button" aria-label="Disminuir cantidad" data-cart-action="decrease" data-cart-key="${escapeHTML(cartItemKey(item))}">−</button>
             <span>${item.quantity}</span>
-            <button type="button" aria-label="Aumentar cantidad" data-cart-action="increase" data-product-id="${escapeHTML(item.product._id)}">+</button>
+            <button type="button" aria-label="Aumentar cantidad" data-cart-action="increase" data-cart-key="${escapeHTML(cartItemKey(item))}">+</button>
           </div>
-          <button class="remove-line" type="button" data-cart-action="remove" data-product-id="${escapeHTML(item.product._id)}">Quitar</button>
+          <button class="remove-line" type="button" data-cart-action="remove" data-cart-key="${escapeHTML(cartItemKey(item))}">Quitar</button>
         </div>
         <div class="cart-line-price">${formatCurrency((Number(item.product.precio) || 0) * item.quantity)}</div>
       </div>`).join('');
@@ -502,7 +572,8 @@
     const transactionIds = outcomes
       .map((outcome) => firstDefined(outcome.response?.transaccion_id, outcome.response?.transaction_id, outcome.response?.id_transaccion, outcome.transactionId))
       .filter(Boolean)
-      .map(String);
+      .map(String)
+      .filter((value, index, values) => values.indexOf(value) === index);
     const serverTotal = firstDefined(
       invoice.total,
       invoice.totales?.total,
@@ -565,9 +636,10 @@
       const lineTotal = (Number(product.precio) || 0) * outcome.item.quantity;
       const rejected = outcome.estado !== 'Aprobado';
       const lineDetail = outcome.error ? ` · ${escapeHTML(outcome.error)}` : '';
+      const characteristics = Object.values(outcome.item.caracteristicas || {}).join(' · ');
       return `
         <div class="invoice-line">
-          <div><strong>${escapeHTML(product.tipo_madera || 'Madera')}</strong><small>${escapeHTML(product.dimensiones || 'Medidas no informadas')} · ${escapeHTML(product.marca || 'Wood AI Corporation')}</small><span class="invoice-line-state ${rejected ? 'is-rejected' : ''}">${rejected ? `NO DISPONIBLE${lineDetail}` : 'CONFIRMADA / REGISTRADA'}</span></div>
+          <div><strong>${escapeHTML(product.tipo_madera || 'Madera')}</strong><small>${escapeHTML(characteristics || product.dimensiones || 'Medidas no informadas')} · ${escapeHTML(product.marca || 'Wood AI Corporation')}</small><span class="invoice-line-state ${rejected ? 'is-rejected' : ''}">${rejected ? `NO DISPONIBLE${lineDetail}` : 'CONFIRMADA / REGISTRADA'}</span></div>
           <span>${outcome.item.quantity} und.</span>
           <span>${formatCurrency(lineTotal)}</span>
         </div>`;
@@ -672,7 +744,108 @@
     }
   };
 
-  const handleCheckout = async () => {
+  const setPaymentAuthFeedback = (message = '', isError = false) => {
+    refs.paymentAuthFeedback.textContent = message;
+    refs.paymentAuthFeedback.classList.toggle('is-error', isError);
+  };
+
+  const openPaymentAuthModal = () => {
+    refs.paymentAuthForm.reset();
+    setPaymentAuthFeedback('');
+    refs.paymentAuthBackdrop.hidden = false;
+    refs.paymentAuthModal.hidden = false;
+    refs.paymentAuthModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('payment-auth-open');
+    window.requestAnimationFrame(() => refs.paymentAuthForm.elements.password.focus());
+  };
+
+  const closePaymentAuthModal = () => {
+    refs.paymentAuthModal.hidden = true;
+    refs.paymentAuthBackdrop.hidden = true;
+    refs.paymentAuthModal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('payment-auth-open');
+  };
+
+  const clearSession = () => {
+    state.token = null;
+    state.user = null;
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    updateSessionUI();
+  };
+
+  const executeCheckout = async (password) => {
+    if (!state.cart.length) throw new Error('El carrito está vacío.');
+    const snapshot = state.cart.map((item) => ({
+      product: { ...item.product },
+      caracteristicas: { ...(item.caracteristicas || {}) },
+      quantity: item.quantity,
+    }));
+    const checkoutId = window.crypto?.randomUUID
+      ? window.crypto.randomUUID()
+      : `checkout-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    refs.checkoutButton.disabled = true;
+    refs.checkoutButton.textContent = 'Confirmando tu compra…';
+
+    try {
+      const result = await apiRequest('/api/pagos/checkout', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${state.token}` },
+        body: JSON.stringify({
+          password,
+          checkout_id: checkoutId,
+          carrito: snapshot.map((line) => ({
+            producto_id: line.product._id,
+            cantidad: line.quantity,
+            caracteristicas: line.caracteristicas,
+          })),
+        }),
+      });
+      const estado = paymentState(result);
+      const lineResults = Array.isArray(result.items) ? result.items : [];
+      const outcomes = snapshot.map((item) => {
+        const serverLine = lineResults.find((line) => String(line.producto_id) === String(item.product._id));
+        return {
+          item,
+          estado: serverLine?.estado === 'RECHAZADO' ? 'Rechazado' : estado,
+          response: result,
+          error: serverLine?.motivo,
+        };
+      });
+      const approvedIds = estado === 'Aprobado' ? snapshot.map((item) => String(item.product._id)) : [];
+      if (estado === 'Aprobado') {
+        snapshot.forEach((item) => {
+          const liveProduct = state.products.find((product) => String(product._id) === String(item.product._id));
+          if (liveProduct && Number.isFinite(Number(liveProduct.existencia))) {
+            liveProduct.existencia = Math.max(0, Number(liveProduct.existencia) - item.quantity);
+          }
+        });
+      }
+      renderProducts();
+      closePaymentAuthModal();
+      openInvoice(buildInvoice(snapshot, outcomes, approvedIds));
+    } catch (error) {
+      // El rechazo de stock también genera comprobante y conserva el carrito.
+      if (error.status === 400 && error.payload?.estado) {
+        const result = error.payload;
+        const outcomes = snapshot.map((item) => ({
+          item,
+          estado: 'Rechazado',
+          response: result,
+          error: result.mensaje || 'Stock insuficiente.',
+        }));
+        openInvoice(buildInvoice(snapshot, outcomes, []));
+        return;
+      }
+      throw error;
+    } finally {
+      refs.checkoutButton.disabled = false;
+      refs.checkoutButton.innerHTML = 'Continuar con la compra <span aria-hidden="true">↗</span>';
+    }
+  };
+
+  const handleCheckout = () => {
     if (!state.cart.length) return showToast('El carrito está vacío.');
     if (!state.token) {
       toggleCart(false);
@@ -681,66 +854,30 @@
       setAuthFeedback('Inicia sesión para continuar con tu compra.', true);
       return;
     }
+    toggleCart(false);
+    openPaymentAuthModal();
+  };
 
-    const snapshot = state.cart.map((item) => ({
-      product: { ...item.product },
-      quantity: item.quantity,
-    }));
-    const outcomes = [];
-    const approvedIds = [];
-    let authenticationFailed = false;
-    const checkoutId = window.crypto?.randomUUID
-      ? window.crypto.randomUUID()
-      : `checkout-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-    refs.checkoutButton.disabled = true;
-    refs.checkoutButton.textContent = 'Confirmando tu compra…';
-
-    for (const item of snapshot) {
-      try {
-        const result = await apiRequest('/api/pagos/checkout', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${state.token}` },
-          body: JSON.stringify({
-            producto_id: item.product._id,
-            cantidad: item.quantity,
-            checkout_id: checkoutId,
-            carrito: snapshot.map((line) => ({
-              producto_id: line.product._id,
-              cantidad: line.quantity,
-            })),
-          }),
-        });
-        const estado = paymentState(result);
-        outcomes.push({ item, estado, response: result });
-        if (estado === 'Aprobado') {
-          approvedIds.push(String(item.product._id));
-          const liveProduct = state.products.find((product) => String(product._id) === String(item.product._id));
-          if (liveProduct) liveProduct.existencia = Math.max(0, Number(liveProduct.existencia) - item.quantity);
-        } else {
-          outcomes[outcomes.length - 1].error = result.mensaje || 'No fue posible confirmar esta línea.';
-        }
-      } catch (error) {
-        if (error.status === 401) {
-          authenticationFailed = true;
-          state.token = null;
-          state.user = null;
-          localStorage.removeItem(TOKEN_KEY);
-          localStorage.removeItem(USER_KEY);
-          updateSessionUI();
-          toggleCart(false);
-          setView('auth');
-          setAuthFeedback('Tu sesión terminó. Inicia sesión nuevamente para continuar.', true);
-          break;
-        }
-        outcomes.push({ item, estado: 'Rechazado', error: error.message || 'No fue posible confirmar esta compra.' });
+  const handlePaymentAuthorization = async (event) => {
+    event.preventDefault();
+    const password = new FormData(refs.paymentAuthForm).get('password');
+    const submitButton = refs.paymentAuthForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    setPaymentAuthFeedback('Validando tu autorización…');
+    try {
+      await executeCheckout(password);
+    } catch (error) {
+      if (error.status === 401 && !String(error.message).toLowerCase().includes('contraseña')) {
+        closePaymentAuthModal();
+        clearSession();
+        setView('auth');
+        setAuthFeedback('Tu sesión terminó. Inicia sesión nuevamente para continuar.', true);
+      } else {
+        setPaymentAuthFeedback(error.message || 'No fue posible autorizar esta compra.', true);
       }
+    } finally {
+      submitButton.disabled = false;
     }
-
-    refs.checkoutButton.disabled = false;
-    refs.checkoutButton.innerHTML = 'Continuar con la compra <span aria-hidden="true">↗</span>';
-    renderProducts();
-    if (!authenticationFailed && outcomes.length) openInvoice(buildInvoice(snapshot, outcomes, approvedIds));
   };
 
   document.addEventListener('click', (event) => {
@@ -763,15 +900,13 @@
       if (action === 'toggle-cart') toggleCart(true);
       if (action === 'close-cart') toggleCart(false);
       if (action === 'close-invoice') closeInvoice();
+      if (action === 'cancel-payment-auth') closePaymentAuthModal();
+      if (action === 'close-admin-notification') closeAdminNotification();
       if (action === 'refresh-products') loadProducts();
       if (action === 'session') {
         if (state.token) {
           const tokenToRevoke = state.token;
-          state.token = null;
-          state.user = null;
-          localStorage.removeItem(TOKEN_KEY);
-          localStorage.removeItem(USER_KEY);
-          updateSessionUI();
+          clearSession();
           showToast('Sesión cerrada.');
           void apiRequest('/api/auth/logout', {
             method: 'POST',
@@ -787,13 +922,19 @@
     const addControl = event.target.closest('[data-add-product]');
     if (addControl) {
       const product = state.products.find((item) => String(item._id) === String(addControl.dataset.addProduct));
-      if (product) addToCart(product);
+      if (product) {
+        const caracteristicas = {};
+        document.querySelectorAll('[data-product-option]').forEach((control) => {
+          if (String(control.dataset.productId) === String(product._id)) caracteristicas[control.dataset.productOption] = control.value;
+        });
+        addToCart(product, caracteristicas);
+      }
       return;
     }
 
     const cartControl = event.target.closest('[data-cart-action]');
     if (cartControl) {
-      const item = state.cart.find((candidate) => String(candidate.product._id) === String(cartControl.dataset.productId));
+      const item = state.cart.find((candidate) => cartItemKey(candidate) === cartControl.dataset.cartKey);
       if (!item) return;
       if (cartControl.dataset.cartAction === 'increase' && item.quantity < Number(item.product.existencia)) item.quantity += 1;
       if (cartControl.dataset.cartAction === 'decrease') item.quantity -= 1;
@@ -804,11 +945,13 @@
 
   refs.loginForm.addEventListener('submit', handleLogin);
   refs.registerForm.addEventListener('submit', handleRegister);
+  refs.paymentAuthForm.addEventListener('submit', handlePaymentAuthorization);
   refs.checkoutButton.addEventListener('click', handleCheckout);
   refs.invoicePrint.addEventListener('click', printInvoice);
   refs.adminRefresh.addEventListener('click', loadAdminDashboard);
   refs.adminApplyFilters.addEventListener('click', loadAdminDashboard);
   document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !refs.paymentAuthModal.hidden) closePaymentAuthModal();
     if (event.key === 'Escape' && state.invoice) closeInvoice();
   });
 

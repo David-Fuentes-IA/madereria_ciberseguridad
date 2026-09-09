@@ -13,9 +13,22 @@ const adminRoutes = require('./src/routes/adminRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const isProduction = process.env.NODE_ENV === 'production';
 
-// Cabeceras de seguridad HTTP básicas.
-app.use(helmet());
+// Vercel termina TLS en el proxy; Express conserva el protocolo original para
+// que las cookies/URLs y el redireccionamiento seguro funcionen correctamente.
+app.set('trust proxy', 1);
+app.use(helmet({
+  hsts: isProduction
+    ? { maxAge: 31536000, includeSubDomains: true, preload: false }
+    : false,
+}));
+app.use((req, res, next) => {
+  if (isProduction && req.get('x-forwarded-proto') !== 'https') {
+    return res.redirect(308, `https://${req.get('host')}${req.originalUrl}`);
+  }
+  return next();
+});
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/auth', authRoutes);

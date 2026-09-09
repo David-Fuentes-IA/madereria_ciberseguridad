@@ -191,6 +191,11 @@
           </div>
 
           <p class="admin-feedback" id="admin-feedback" role="status" aria-live="polite"></p>
+          <aside class="admin-notification" id="admin-notification" role="status" aria-live="polite" hidden>
+            <span class="admin-notification-mark" aria-hidden="true">•</span>
+            <div><strong>Nueva compra registrada</strong><small id="admin-notification-text">Hay actividad nueva en el catálogo.</small></div>
+            <button type="button" class="admin-notification-close" data-action="close-admin-notification" aria-label="Cerrar notificación">×</button>
+          </aside>
 
           <div class="admin-panels">
             <article class="admin-panel admin-panel-wide">
@@ -303,6 +308,25 @@
           <button class="btn btn-primary btn-block" type="button" id="invoice-finalize" data-action="close-invoice">Finalizar compra <span aria-hidden="true">↗</span></button>
           <p>Al finalizar, los productos confirmados se retirarán del carrito. Los no disponibles permanecerán para que puedas intentarlo de nuevo.</p>
         </div>
+      </div>
+    </section>
+
+    <div class="payment-auth-backdrop" id="payment-auth-backdrop" hidden></div>
+    <section class="payment-auth-modal" id="payment-auth-modal" role="dialog" aria-modal="true" aria-labelledby="payment-auth-title" aria-hidden="true" hidden>
+      <div class="payment-auth-shell">
+        <button class="close-button" type="button" aria-label="Cancelar autorización" data-action="cancel-payment-auth">×</button>
+        <span class="eyebrow">AUTORIZACIÓN DE COMPRA</span>
+        <h2 id="payment-auth-title">Confirma tu <span class="outline-word">contraseña.</span></h2>
+        <p>Por seguridad, vuelve a autenticarte antes de registrar el pedido y descontar el inventario.</p>
+        <form id="payment-auth-form" class="auth-form">
+          <label for="payment-auth-password">Contraseña de tu cuenta</label>
+          <input id="payment-auth-password" name="password" type="password" autocomplete="current-password" required />
+          <p class="form-feedback" id="payment-auth-feedback" role="alert" aria-live="polite"></p>
+          <div class="payment-auth-actions">
+            <button class="btn btn-ghost" type="button" data-action="cancel-payment-auth">Cancelar</button>
+            <button class="btn btn-primary" type="submit">Autorizar compra <span aria-hidden="true">↗</span></button>
+          </div>
+        </form>
       </div>
     </section>
 

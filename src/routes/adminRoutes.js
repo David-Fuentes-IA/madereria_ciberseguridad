@@ -7,6 +7,7 @@ const {
   listarPedidos,
   listarAuditoria,
   listarInventario,
+  obtenerNotificaciones,
 } = require('../controllers/adminController');
 
 const router = express.Router();
@@ -17,5 +18,6 @@ router.get('/usuarios', listarUsuarios);
 router.get('/pedidos', listarPedidos);
 router.get('/auditoria', listarAuditoria);
 router.get('/inventario', listarInventario);
+router.get('/notificaciones', obtenerNotificaciones);
 
 module.exports = router;

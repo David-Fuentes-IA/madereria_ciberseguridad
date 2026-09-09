@@ -26,7 +26,13 @@ const registro = async (req, res) => {
       fecha_alta: new Date(),
     });
 
-    await simularEnvioOTP(correo);
+    try {
+      await simularEnvioOTP(correo);
+    } catch (mailError) {
+      // El alta de la cuenta no se revierte si el proveedor SMTP está caído.
+      // El modo sin SMTP continúa mostrando el código en consola para desarrollo.
+      console.error(`No fue posible enviar el OTP a ${correo}: ${mailError.message}`);
+    }
 
     return res.status(201).json({
       mensaje: 'Usuario registrado correctamente.',

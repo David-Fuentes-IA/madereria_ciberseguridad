@@ -16,6 +16,20 @@ const productoSchema = new mongoose.Schema({
   dimensiones: {
     type: String,
   },
+  // Opciones comerciales de corte/acabado. El precio y el stock siguen
+  // perteneciendo al producto base; las opciones solo personalizan la línea.
+  opciones_color: {
+    type: [String],
+    default: undefined,
+  },
+  opciones_textura: {
+    type: [String],
+    default: undefined,
+  },
+  opciones_dimensiones: {
+    type: [String],
+    default: undefined,
+  },
   precio: {
     type: Number,
   },
@@ -28,4 +42,3 @@ const productoSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('Producto', productoSchema);
-

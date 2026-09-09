@@ -11,6 +11,9 @@ const pedidoItemSchema = new mongoose.Schema({
   },
   marca: String,
   dimensiones: String,
+  caracteristicas: {
+    type: mongoose.Schema.Types.Mixed,
+  },
   cantidad: {
     type: Number,
     required: true,
@@ -48,6 +51,10 @@ const pedidoSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Usuario',
     required: true,
+    index: true,
+  },
+  sesion_id: {
+    type: String,
     index: true,
   },
   items: {

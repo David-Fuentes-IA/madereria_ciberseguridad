@@ -190,10 +190,42 @@ const listarInventario = async (_req, res) => {
   }
 };
 
+const obtenerNotificaciones = async (req, res) => {
+  try {
+    const desde = new Date(req.query.desde || Date.now() - 15000);
+    const fechaDesde = Number.isNaN(desde.getTime()) ? new Date(Date.now() - 15000) : desde;
+    const pedidos = await Pedido.find({
+      estado: 'APROBADO',
+      fecha: { $gt: fechaDesde },
+      // Una sesión administrativa no recibe el aviso de su propia compra.
+      sesion_id: { $ne: String(req.usuario.sid) },
+    })
+      .sort({ fecha: 1 })
+      .limit(20)
+      .populate('usuario_id', 'correo')
+      .lean();
+
+    return res.status(200).json({
+      datos: pedidos.map((pedido) => ({
+        id: pedido._id,
+        folio: pedido.folio,
+        total: pedido.total,
+        fecha: pedido.fecha,
+        cliente: pedido.usuario_id?.correo || 'Cliente registrado',
+        lineas: pedido.items?.length || 0,
+      })),
+    });
+  } catch (error) {
+    console.error(`Error al obtener notificaciones administrativas: ${error.message}`);
+    return res.status(500).json({ mensaje: 'No fue posible consultar las notificaciones.' });
+  }
+};
+
 module.exports = {
   obtenerResumen,
   listarUsuarios,
   listarPedidos,
   listarAuditoria,
   listarInventario,
+  obtenerNotificaciones,
 };
