@@ -34,3 +34,7 @@ Thumbs.db
 *.swp
 *.swo
 
+# Internal security analysis & architecture reports
+ANALISIS_CIBERSEGURIDAD*.md
+CAMBIOS_ARQUITECTURA*.md
+

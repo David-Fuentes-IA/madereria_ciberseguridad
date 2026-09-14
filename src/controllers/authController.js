@@ -18,24 +18,24 @@ const registro = async (req, res) => {
     }
 
     const password_hash = await bcrypt.hash(password, 10);
+    let otpGenerado = null;
+    try {
+      otpGenerado = await simularEnvioOTP(correo);
+    } catch (mailError) {
+      console.error(`No fue posible enviar el OTP a ${correo}: ${mailError.message}`);
+    }
+
     const usuario = await Usuario.create({
       correo,
       password_hash,
       rol: 'cliente',
-      estado: 'activo',
+      estado: 'pendiente',
+      otp_code: otpGenerado ? String(otpGenerado) : null,
       fecha_alta: new Date(),
     });
 
-    try {
-      await simularEnvioOTP(correo);
-    } catch (mailError) {
-      // El alta de la cuenta no se revierte si el proveedor SMTP está caído.
-      // El modo sin SMTP continúa mostrando el código en consola para desarrollo.
-      console.error(`No fue posible enviar el OTP a ${correo}: ${mailError.message}`);
-    }
-
     return res.status(201).json({
-      mensaje: 'Usuario registrado correctamente.',
+      mensaje: 'Usuario registrado. Por favor, verifica tu código OTP para activar la cuenta.',
       usuario_id: usuario._id,
     });
   } catch (error) {
@@ -74,9 +74,9 @@ const login = async (req, res) => {
       });
     }
 
-    if (usuario.estado === 'inactivo') {
+    if (usuario.estado === 'inactivo' || usuario.estado === 'pendiente') {
       return res.status(403).json({
-        mensaje: 'La cuenta está inactiva.',
+        mensaje: `La cuenta está ${usuario.estado}.`,
       });
     }
 
@@ -134,8 +134,40 @@ const cerrarSesion = async (req, res) => {
   }
 };
 
+const verificarOtp = async (req, res) => {
+  try {
+    const { correo, otp_code } = req.body;
+    if (!correo || !otp_code) {
+      return res.status(400).json({ mensaje: 'Correo y código OTP son requeridos.' });
+    }
+
+    const usuario = await Usuario.findOne({ correo });
+    if (!usuario) {
+      return res.status(404).json({ mensaje: 'Usuario no encontrado.' });
+    }
+
+    if (usuario.estado !== 'pendiente') {
+      return res.status(400).json({ mensaje: 'La cuenta ya está activa o inactiva.' });
+    }
+
+    if (usuario.otp_code !== String(otp_code)) {
+      return res.status(401).json({ mensaje: 'Código OTP inválido.' });
+    }
+
+    usuario.estado = 'activo';
+    usuario.otp_code = null;
+    await usuario.save();
+
+    return res.status(200).json({ mensaje: 'Cuenta verificada y activada correctamente.' });
+  } catch (error) {
+    console.error(`Error en verificación OTP: ${error.message}`);
+    return res.status(500).json({ mensaje: 'Error interno del servidor.' });
+  }
+};
+
 module.exports = {
   registro,
   login,
   cerrarSesion,
+  verificarOtp,
 };

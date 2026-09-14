@@ -19,8 +19,11 @@ const usuarioSchema = new mongoose.Schema({
   },
   estado: {
     type: String,
-    enum: ['activo', 'inactivo'],
-    default: 'activo',
+    enum: ['activo', 'inactivo', 'pendiente'],
+    default: 'pendiente',
+  },
+  otp_code: {
+    type: String,
   },
   fecha_alta: {
     type: Date,
