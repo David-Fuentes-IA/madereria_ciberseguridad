@@ -528,6 +528,21 @@ def build_pdf():
         )
         story.append(Paragraph(caption2, style_caption))
 
+    story.append(Spacer(1, 10))
+
+    # Figura 3: Simulacion de Ataques
+    img_attack_path = os.path.abspath('outputs/img/terminal_attack_simulation.png')
+    if os.path.exists(img_attack_path):
+        im3 = Image(img_attack_path, width=420, height=235)
+        story.append(im3)
+        caption3 = (
+            "<b>Figura 3.</b> Banco de Pruebas de Resistencia y Simulación de Ataques: Ejecución de vectores reales de agresión "
+            "(Fuerza Bruta / DoS, Falsificación de firma JWT y Alteración de base de datos), verificando la respuesta activa de "
+            "los controles de seguridad (HTTP 429 Too Many Requests, HTTP 401 Unauthorized y bloqueo por hook Append-Only)."
+        )
+        story.append(Paragraph(caption3, style_caption))
+
+    story.append(PageBreak())
     # ==================== 5. CONCLUSIONES Y TRABAJO FUTURO ====================
     story.append(Spacer(1, 10))
     story.append(Paragraph("5. Conclusiones Técnicas y Dictamen de Aceptación", style_h1))
@@ -587,7 +602,21 @@ def build_pdf():
         ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor('#F8F8F8')]),
     ]))
     story.append(t_metricas)
-    story.append(Spacer(1, 20))
+
+    # 5.1 Recomendaciones y Trabajo Futuro
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("5.1 Recomendaciones Técnicas de Continuidad", style_h2))
+    p_rec = (
+        "Para la transición del prototipo hacia un entorno corporativo de alta criticidad, se recomienda:<br/>"
+        "• <b>Web Application Firewall (WAF) Perimetral:</b> Desplegar una capa previa (ej. Cloudflare Enterprise o AWS WAF) "
+        "para absorber ataques distribuidos de denegación de servicio (DDoS volumétrico) antes de que alcancen el runtime de Node.js.<br/>"
+        "• <b>Módulos HSM para Gestión de Claves:</b> Migrar la generación al vuelo de claves asimétricas RSA hacia un Key Management "
+        "Service (AWS KMS o HashiCorp Vault), garantizando que las claves privadas nunca residan en memoria volátil de la aplicación.<br/>"
+        "• <b>Monitoreo y SIEM Centralizado:</b> Integrar alertas automáticas (Elastic Security / Datadog) vinculadas a los registros "
+        "rechazados de LogAuditoria para detectar intentos sostenidos de intrusión en tiempo real."
+    )
+    story.append(Paragraph(p_rec, style_body))
+
 
     doc.build(story, canvasmaker=UniversityNumberedCanvas)
     print(f"[OK] Reporte PDF generado exitosamente en: {output_pdf}")
