@@ -129,9 +129,20 @@ const crearRegistroOperacion = async ({ session, req, items, productos, estado, 
 
 // Se mantiene la función por si se requiere después, pero ya no rompe el flujo
 const verificarReautenticacion = async (req) => {
-  if (typeof req.body?.password !== 'string' || !req.body.password) return false;
-  const usuario = await Usuario.findById(req.usuario._id).select('+password_hash');
-  return Boolean(usuario && await bcrypt.compare(req.body.password, usuario.password_hash));
+  try {
+    const password = req.body?.password;
+    if (!password || typeof password !== 'string') return false;
+
+    const usuario = await Usuario.findById(req.usuario._id);
+    
+    // Prevención del crash: Validar que el usuario y su hash existan
+    if (!usuario || !usuario.password_hash) return false;
+
+    return await bcrypt.compare(password, usuario.password_hash);
+  } catch (error) {
+    console.error('Error interno al verificar reautenticación:', error.message);
+    return false;
+  }
 };
 
 const procesarPago = async (req, res) => {
