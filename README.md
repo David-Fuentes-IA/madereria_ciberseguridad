@@ -8,7 +8,7 @@
 
 * **Institución:** Universidad Autónoma del Estado de México (UAEMex)
 * **Facultad:** Facultad de Ingeniería
-* **Licenciatura:** Ingeniería en Computación / Sistemas
+* **Licenciatura:** Ingeniería en Inteligencia Artificial
 * **Asignatura:** Ciberseguridad — 5° Semestre (Grupo A1)
 * **Docente Titular:** Profesora Judith Moreno Jimenez
 * **Equipo de Desarrollo y Auditoría:**
