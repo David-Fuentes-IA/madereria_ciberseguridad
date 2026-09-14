@@ -27,8 +27,8 @@ const logAuditoriaSchema = new mongoose.Schema({
 
 const crypto = require('crypto');
 
-const appendOnlyError = (next) => {
-  next(new Error('LogAuditoria es append-only: no se permiten modificaciones ni eliminaciones.'));
+const appendOnlyError = () => {
+  throw new Error('LogAuditoria es append-only: no se permiten modificaciones ni eliminaciones.');
 };
 
 logAuditoriaSchema.pre(

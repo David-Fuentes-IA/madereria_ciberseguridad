@@ -90,11 +90,10 @@ const pedidoSchema = new mongoose.Schema({
 pedidoSchema.index({ usuario_id: 1, fecha: -1 });
 pedidoSchema.index({ estado: 1, fecha: -1 });
 
-pedidoSchema.pre('validate', function assignFolio(next) {
+pedidoSchema.pre('validate', function assignFolio() {
   if (!this.folio) {
     this.folio = `WAI-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
   }
-  next();
 });
 
 module.exports = mongoose.model('Pedido', pedidoSchema);
