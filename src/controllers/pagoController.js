@@ -254,7 +254,7 @@ const procesarPago = async (req, res) => {
       }
     }
 
-    console.error(`Error al procesar pago: ${error.message}`);
+    console.error(`Error al procesar pago: \n${error.stack}`);
     return res.status(500).json({ mensaje: 'Error interno del servidor.' });
   } finally {
     await session.endSession();
