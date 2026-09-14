@@ -330,6 +330,26 @@
       </div>
     </section>
 
+    <div class="payment-auth-backdrop" id="otp-backdrop" hidden></div>
+    <section class="payment-auth-modal" id="otp-modal" role="dialog" aria-modal="true" aria-labelledby="otp-title" aria-hidden="true" hidden>
+      <div class="payment-auth-shell">
+        <button class="close-button" type="button" aria-label="Cancelar verificación" data-action="cancel-otp">×</button>
+        <span class="eyebrow">AUTENTICACIÓN 2FA</span>
+        <h2 id="otp-title">Verifica tu <span class="outline-word">cuenta.</span></h2>
+        <p>Ingresa el código de 6 dígitos que enviamos a tu correo para activarla.</p>
+        <form id="otp-form" class="auth-form">
+          <input type="hidden" id="otp-email" name="correo" />
+          <label for="otp-code">Código OTP (6 dígitos)</label>
+          <input id="otp-code" name="otp_code" type="text" pattern="\d{6}" maxlength="6" autocomplete="one-time-code" required placeholder="123456" />
+          <p class="form-feedback" id="otp-feedback" role="alert" aria-live="polite"></p>
+          <div class="payment-auth-actions">
+            <button class="btn btn-ghost" type="button" data-action="cancel-otp">Cancelar</button>
+            <button class="btn btn-primary" type="submit">Verificar Cuenta <span aria-hidden="true">→</span></button>
+          </div>
+        </form>
+      </div>
+    </section>
+
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script>

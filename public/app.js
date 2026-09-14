@@ -95,6 +95,10 @@
     paymentAuthBackdrop: document.getElementById('payment-auth-backdrop'),
     paymentAuthForm: document.getElementById('payment-auth-form'),
     paymentAuthFeedback: document.getElementById('payment-auth-feedback'),
+    otpModal: document.getElementById('otp-modal'),
+    otpBackdrop: document.getElementById('otp-backdrop'),
+    otpForm: document.getElementById('otp-form'),
+    otpFeedback: document.getElementById('otp-feedback'),
   };
 
   const demoProducts = [
@@ -715,7 +719,12 @@
       showToast('Has iniciado sesión correctamente.');
       window.setTimeout(() => setView('catalog'), 350);
     } catch (error) {
-      setAuthFeedback(error.message || 'No fue posible iniciar sesión.', true);
+      if (error.status === 403 && String(error.message).toLowerCase().includes('pendiente')) {
+        openOtpModal(formData.get('correo'));
+        setAuthFeedback('Verifica tu correo para continuar.', true);
+      } else {
+        setAuthFeedback(error.message || 'No fue posible iniciar sesión.', true);
+      }
     } finally {
       submitButton.disabled = false;
     }
@@ -732,11 +741,10 @@
         method: 'POST',
         body: JSON.stringify({ correo: formData.get('correo'), password: formData.get('password') }),
       });
-      refs.loginForm.elements.correo.value = formData.get('correo');
       refs.registerForm.reset();
-      setAuthMode('login');
-      setAuthFeedback(result.mensaje || 'Tu cuenta fue creada. Ya puedes iniciar sesión.');
-      showToast('Cuenta creada. Te damos la bienvenida.');
+      openOtpModal(formData.get('correo'));
+      setAuthFeedback('Revisa tu correo para el código de activación.');
+      showToast('Cuenta creada. Revisa tu correo.');
     } catch (error) {
       setAuthFeedback(error.message || 'No fue posible crear tu cuenta.', true);
     } finally {
@@ -764,6 +772,55 @@
     refs.paymentAuthBackdrop.hidden = true;
     refs.paymentAuthModal.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('payment-auth-open');
+  };
+
+  const setOtpFeedback = (message, isError = false) => {
+    if (!refs.otpFeedback) return;
+    refs.otpFeedback.textContent = message;
+    refs.otpFeedback.classList.toggle('is-error', isError);
+  };
+
+  const openOtpModal = (email) => {
+    if (!refs.otpForm) return;
+    refs.otpForm.reset();
+    refs.otpForm.elements.correo.value = email;
+    setOtpFeedback('');
+    refs.otpBackdrop.hidden = false;
+    refs.otpModal.hidden = false;
+    refs.otpModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('otp-open');
+    window.requestAnimationFrame(() => refs.otpForm.elements.otp_code.focus());
+  };
+
+  const closeOtpModal = () => {
+    if (!refs.otpModal) return;
+    refs.otpModal.hidden = true;
+    refs.otpBackdrop.hidden = true;
+    refs.otpModal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('otp-open');
+  };
+
+  const handleOtpVerification = async (event) => {
+    event.preventDefault();
+    const formData = new FormData(refs.otpForm);
+    const submitButton = refs.otpForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    setOtpFeedback('Verificando código...');
+    try {
+      const result = await apiRequest('/api/auth/verificar-otp', {
+        method: 'POST',
+        body: JSON.stringify({ correo: formData.get('correo'), otp_code: formData.get('otp_code') }),
+      });
+      showToast(result.mensaje || 'Cuenta verificada.');
+      closeOtpModal();
+      setAuthMode('login');
+      refs.loginForm.elements.correo.value = formData.get('correo');
+      setAuthFeedback('Tu cuenta ha sido activada. Ya puedes iniciar sesión.');
+    } catch (error) {
+      setOtpFeedback(error.message || 'Código incorrecto.', true);
+    } finally {
+      submitButton.disabled = false;
+    }
   };
 
   const clearSession = () => {
@@ -954,12 +1011,15 @@
   refs.loginForm.addEventListener('submit', handleLogin);
   refs.registerForm.addEventListener('submit', handleRegister);
   refs.paymentAuthForm.addEventListener('submit', handlePaymentAuthorization);
+  if (refs.otpForm) refs.otpForm.addEventListener('submit', handleOtpVerification);
+  document.querySelectorAll('[data-action="cancel-otp"]').forEach(btn => btn.addEventListener('click', closeOtpModal));
   refs.checkoutButton.addEventListener('click', handleCheckout);
   refs.invoicePrint.addEventListener('click', printInvoice);
   refs.adminRefresh.addEventListener('click', loadAdminDashboard);
   refs.adminApplyFilters.addEventListener('click', loadAdminDashboard);
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && !refs.paymentAuthModal.hidden) closePaymentAuthModal();
+    if (event.key === 'Escape' && refs.otpModal && !refs.otpModal.hidden) closeOtpModal();
     if (event.key === 'Escape' && state.invoice) closeInvoice();
   });
 
