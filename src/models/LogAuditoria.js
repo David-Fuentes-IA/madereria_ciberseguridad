@@ -41,19 +41,16 @@ logAuditoriaSchema.pre(
   appendOnlyError,
 );
 
-logAuditoriaSchema.pre('save', async function (next) {
+logAuditoriaSchema.pre('save', async function () {
   if (this.isNew) {
-    try {
-      const ultimoLog = await this.constructor.findOne().sort({ _id: -1 }).exec();
-      this.hash_anterior = ultimoLog ? ultimoLog.hash_actual : 'GENESIS_BLOCK';
-      
-      const payload = `${this.hash_anterior}|${this.fecha_utc?.toISOString()}|${this.accion}|${this.usuario_id}`;
-      this.hash_actual = crypto.createHash('sha256').update(payload).digest('hex');
-    } catch (error) {
-      return next(error);
-    }
+    // Si estamos en una transacción, pasamos la sesión a la consulta
+    const session = this.$session();
+    const ultimoLog = await this.constructor.findOne().session(session).sort({ _id: -1 }).exec();
+    this.hash_anterior = ultimoLog ? ultimoLog.hash_actual : 'GENESIS_BLOCK';
+    
+    const payload = `${this.hash_anterior}|${this.fecha_utc?.toISOString()}|${this.accion}|${this.usuario_id}`;
+    this.hash_actual = crypto.createHash('sha256').update(payload).digest('hex');
   }
-  next();
 });
 
 module.exports = mongoose.model('LogAuditoria', logAuditoriaSchema);
