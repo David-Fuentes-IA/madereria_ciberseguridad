@@ -1,0 +1,1915 @@
+ 
+ 
+           
+Universidad Autónoma del Estado de México 
+ 
+     
+Facultad de Ingeniería
+ 
+ 
+ 
+ 
+Curso: 
+ 
+Ciberseguridad
+ 
+ 
+Profesora:
+ 
+Judith Moreno Jimenez 
+ 
+ 
+ 
+Trabajo:
+ 
+Plataforma
+ 
+ 
+ 
+ 
+Miembros: 
+ 
+ 
+Debbie Marina Padilla Lara
+ 
+Daniel Aguilar Garduño
+ 
+ 
+David Nava Fuentes
+ 
+ 
+Isaac Sánchez Camacho
+ 
+ 
+ 
+5st Semester
+ 
+ 
+Group A1
+ 
+ 
+ 
+ 
+Toluca, State of Mexico, August 19, 2026.
+ 
+ 
+1
+ 
+ 
+Índice
+ 
+Especificación de Requisitos de Software \(ERS\
+ 
+...............................
+ 
+3
+ 
+1. Introducción
+ 
+................................
+................................
+.......................
+ 
+3
+ 
+1.1 Propósito
+ 
+................................
+................................
+.......................
+ 
+3
+ 
+1.2 Alcance del sistema
+ 
+................................
+................................
+.......
+ 
+3
+ 
+1.3 Personal involucrado
+ 
+................................
+................................
+.....
+ 
+4
+ 
+1.4 Definiciones, acrónimos y abreviaturas
+ 
+................................
+.........
+ 
+4
+ 
+1.5 Referencias
+ 
+................................
+................................
+...................
+ 
+5
+ 
+2. Descripción General
+ 
+................................
+................................
+..........
+ 
+6
+ 
+2.2 Funciones del producto
+ 
+................................
+................................
+.
+ 
+6
+ 
+2.3 Características de los usuarios
+ 
+................................
+.....................
+ 
+7
+ 
+2.4 Restricciones
+ 
+................................
+................................
+.................
+ 
+7
+ 
+2.5 Suposiciones y dependencias
+ 
+................................
+.......................
+ 
+8
+ 
+3. Requisitos Específicos
+ 
+................................
+................................
+......
+ 
+8
+ 
+3.1 Requisitos Funcionales
+ 
+................................
+................................
+.
+ 
+8
+ 
+3.2 Requisitos No Funcionales
+ 
+................................
+..........................
+ 
+10
+ 
+3.3 Requisitos de Interfaz Externa
+ 
+................................
+.................
+ 
+11
+ 
+3.3.1 Interfaces de Usuario \(UI\:
+ 
+................................
+................................
+ 
+11
+ 
+3.3.2 Interfaces de Hardware:
+ 
+................................
+................................
+....
+ 
+11
+ 
+3.3.3 Interfaces de Software:
+ 
+................................
+................................
+.....
+ 
+12
+ 
+3.3.4 Interfaces de Comunicación:
+ 
+................................
+................................
+.......
+ 
+12
+ 
+Descripción del Diseño de Software \(SDD\
+ 
+................................
+.......
+ 
+1
+3
+ 
+1. Introducción al Diseño
+ 
+................................
+................................
+....
+ 
+1
+3
+ 
+1.1 Propósito y alcance del diseño
+ 
+................................
+....................
+ 
+13
+ 
+2. Descripción de la Arquitectura
+ 
+................................
+.......................
+ 
+1
+3
+ 
+2.2 Vista Lógica
+ 
+................................
+................................
+.................
+ 
+1
+3
+ 
+2.3 Vista de Proceso
+ 
+................................
+................................
+.........
+ 
+1
+4
+ 
+2.4 Vista de Despliegue
+................................
+................................
+.....
+ 
+1
+6
+ 
+3. Diseño de Detalle
+ 
+................................
+................................
+.............
+ 
+1
+7
+ 
+3.1 Componentes del sistema
+ 
+................................
+...........................
+ 
+1
+7
+ 
+3.2 Diseño de la Base de Datos
+ 
+................................
+........................
+ 
+1
+9
+ 
+3.3 Diseño de la Interfaz y APIs
+ 
+................................
+........................
+ 
+20
+ 
+
+ 
+
+ 
+ 
+2
+ 
+Plan de Pruebas de Software \(STD\
+ 
+................................
+...................
+ 
+14
+ 
+1.
+ 
+Enfoque de Pruebas
+ 
+................................
+................................
+.....
+ 
+14
+ 
+2.
+ 
+Casos de Prueba \(Ejemplos sugeridos\
+ 
+................................
+.......
+ 
+14
+ 
+3.
+ 
+Casos de Prueba
+ 
+4.
+ 
+Roles y Responsabilidades
+ 
+5.
+ 
+Cronograma
+ 
+6.
+ 
+Riesgos y Contingencias
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+3
+ 
+ 
+Especificación de Requisitos de Software 
+\(ERS\
+ 
+1. Introducción
+ 
+1.1 Propósito
+ 
+ 
+El propósito de este documento es definir la Especificación de 
+Requisitos de Software \(ERS\ara el nuevo módulo de "Confirmación 
+de Pedido y Pago Seguro". Este documento está dirigido a la Dirección 
+General de la Maderería y a los directivos del área come
+rcial \(el cliente\ 
+con el fin de establecer un entendimiento formal, claro y detallado sobre 
+las funcionalidades del sistema, así como los mecanismos de 
+ciberseguridad que se implementarán para proteger las transacciones 
+de la empresa.
+ 
+ 
+1.2 Alcance del sistema
+ 
+ 
+El sistema a desarrollar se centrará de manera exclusiva en el flujo 
+operativo de venta web de la Maderería. Su alcance comprende la 
+autenticación de usuarios, la selección de características personalizadas 
+de la madera \(marca, color, textura, dimensión\ 
+la generación y firma 
+digital de un reporte de contrato de compra
+-
+venta, y el procesamiento 
+del pago. 
+Exclusiones explícitas del alcance:
+ 
+Para mantener el 
+proyecto enfocado en la seguridad de las transacciones digitales, este 
+sistema 
+no
+ 
+controlará la logística física de los envíos ni contará con un 
+módulo de gestión avanzada de almacén. Las áreas de inventario y 
+envíos se limitarán únicamente a recibir notificaciones automáticas 
+\(cambios de estado\ez que el pago y el contrato hayan
+ 
+sido 
+aprobados y validados criptográficamente. 
+ 
+ 
+ 
+4
+ 
+1.3 Personal involucrado
+ 
+Equipo de Desarrollo \(Ingeniería\:
+ 
+
+ 
+Desarrolladores de Software:
+ 
+Encargados de programar la 
+interfaz de usuario, la conexión con la base de datos y la pasarela 
+de pagos.
+ 
+
+ 
+Ingeniero de Ciberseguridad:
+ 
+Responsable del diseño e 
+implementación de los mecanismos de autenticidad \(sesiones 
+seguras\ no repudio \(firmas digitales en los contratos\
+trazabilidad \(registros inmutables en los logs\
+ 
+Usuarios del Sistema:
+ 
+
+ 
+Cliente Web:
+ 
+Usuario final que interactúa con la plataforma para 
+buscar madera, aceptar el contrato y realizar el pago.
+ 
+
+ 
+Contador / Auditor:
+ 
+Usuario interno con privilegios para verificar 
+los registros de auditoría, las facturas y confirmar el recibo de 
+pago.
+ 
+\(Nota de alcance: El personal operario de Almacén y Envíos no 
+interactúa con las pantallas de este sistema, su rol se limita a ser 
+receptores de notificaciones\
+ 
+1.4 Definiciones, acrónimos y abreviaturas
+ 
+Autenticidad:
+ 
+Garantía de que un usuario, sistema o dato es quien dice 
+ser \(generalmente verificado mediante contraseñas, certificados o 
+tokens\
+ 
+No repudio:
+ 
+Mecanismo de seguridad \(como una firma digital\que 
+genera evidencia criptográfica, impidiendo que el cliente o la empresa 
+puedan negar haber generado el contrato de compra
+-
+venta.
+ 
+Trazabilidad:
+ 
+Capacidad de registrar y rastrear históricamente todas las 
+acciones y eventos críticos realizados en el sistema \(conocido como 
+Audit Trail
+ 
+o Log de Auditoría\
+ 
+Hash:
+ 
+Algoritmo matemático que transforma un documento \(como el 
+contrato de madera\ en una cadena de caracteres única e irrepetible, 
+garantizando que no fue alterado.
+ 
+es-419Comentado [1]: 
+La recomendación profesional es 
+hacerla al final. Lo ideal es poner una lista base \(como 
+la que hice\o a medida que se vaya redactando el 
+resto de la documentación y los diagramas, 
+inevitablemente se usan términos técnicos nuevos. 
+ 
+Cuando acabemos todo el documento, debemos 
+regresar a esta sección y agregar los acrónimos que 
+hayan faltado para que no quede ninguno sin explicar.
+ 
+ 
+5
+ 
+PKI \(Infraestructura de Clave Pública\:
+ 
+Conjunto de roles, políticas y 
+hardware necesarios para crear, gestionar, distribuir y revocar 
+certificados digitales.
+ 
+ 
+1.5 Referencias
+ 
+Este proyecto y su arquitectura toman como referencia los siguientes 
+estándares de la industria: 
+ 
+ISO/IEC 27032 \(Directrices para la ciberseguridad\
+ 
+Estándar 
+utilizado como marco de referencia para garantizar un entorno 
+digital seguro, proteger el ciberespacio de la Maderería y planificar 
+la mitigación de amenazas en el flujo de ventas.
+ 
+ISO/IEC 13888 \(Técnicas de seguridad de TI 
+-
+ 
+No repudio\:
+ 
+Estándar que define los mecanismos criptográficos y de evidencia 
+\(como las firmas asimétricas\necesarios para garantizar que las 
+transacciones y contratos generados no puedan ser negados por 
+las partes involucradas.
+ 
+IEEE 27000 / ISO 27001 \(SGSI\
+ 
+Normativa fundamental 
+implementada para establecer los controles de seguridad y 
+requisitos en la gestión de la información confidencial \(como los 
+datos personales del cliente y la información de la pasarela de 
+pagos\
+ 
+OWASP Top 10 \(Open Worldwide Application Security Project\
+ 
+Estándar de la industria para la seguridad de aplicaciones web, 
+utilizado como referencia principal para prevenir vulnerabilidades 
+comunes \(como inyecciones SQL, fallos de autenticación y 
+exposición de datos sensibles\ durante el desarrollo del portal de 
+la 
+maderería.
+ 
+ 
+ 
+ 
+ 
+ 
+6
+ 
+2. Descripción General
+ 
+2.1 Perspectiva del producto
+ 
+ 
+El módulo de "Confirmación de Pedido y Pago Seguro" opera como un 
+subsistema independiente pero altamente integrado dentro de la 
+plataforma web principal de la Maderería.
+ 
+
+ 
+Visión Externa y Contexto Operacional:
+ 
+El sistema actúa 
+como el puente crítico entre la selección del cliente y la 
+consolidación de la venta. Se comunica de forma externa 
+con una pasarela de pagos para procesar la transacción 
+económica.
+ 
+
+ 
+Relación con otros sistemas:
+ 
+Una vez que el pago es 
+aprobado, el módulo interactúa unidireccionalmente con los 
+sistemas de Almacén y Envíos, limitándose a enviar 
+notificaciones de actualización de estado para descontar el 
+inventario y programar la ruta, sin gestionar la lógica intern
+a 
+de dichos departamentos.
+ 
+
+ 
+UX \(Experiencia de Usuario\
+ 
+La interfaz está diseñada 
+para minimizar la fricción cognitiva durante el proceso de 
+pago, aislando los complejos procesos criptográficos \(como 
+la firma del contrato\en el backend, presentando al usuario 
+únicamente indicadores visuales de confianza y seg
+uridad.
+ 
+ 
+ 
+2.2 Funciones del producto
+ 
+Considerando el enfoque acotado del proyecto, las capacidades del 
+sistema se centran en el flujo crítico de venta y seguridad:
+ 
+1.
+ 
+Selección y parametrización:
+ 
+Capacidad del usuario para 
+seleccionar características específicas del producto \(marca, color, 
+madera, textura, dimensión\
+ 
+2.
+ 
+Generación de Evidencia \(No Repudio\:
+ 
+Creación automatizada 
+de un reporte de "contrato, compra venta" que incluye una firma 
+ 
+7
+ 
+digital basada en criptografía asimétrica, vinculando 
+irrefutablemente el pedido al cliente.
+ 
+3.
+ 
+Procesamiento de Pago Seguro:
+ 
+Evaluación de disponibilidad 
+de inventario e integración con pasarela de pagos para procesar la 
+transacción.
+ 
+4.
+ 
+Trazabilidad Transaccional:
+ 
+Registro inmutable en bitácoras 
+\(logs\ de las decisiones de compra, aprobaciones y rechazos de 
+fondos, garantizando un historial auditable de todo el proceso.
+ 
+2.3 Características de los usuarios
+ 
+Cliente Web \(Perfil no técnico\
+ 
+Es el consumidor final. No posee 
+conocimientos técnicos avanzados. Su interacción con el sistema 
+requiere una interfaz altamente intuitiva, con mensajes de 
+retroalimentación claros \(por ejemplo, notificaciones comprensibles en 
+caso de fondos insuficientes
+ 
+o falta de stock\
+ 
+Administrador / Contador \(Perfil técnico básico\
+ 
+Personal interno 
+encargado de facturar y confirmar pagos. Poseen conocimientos 
+técnicos básicos para operar software administrativo. Requerirán acceso 
+a un panel de control simplificado para visualizar los registros de 
+auditoría \(logs\ y validar la autent
+icidad de los contratos firmados 
+digitalmente.
+ 
+2.4 Restricciones
+ 
+Restricciones de Tiempo:
+ 
+El diseño, desarrollo, pruebas y 
+despliegue del sistema deben estar completados de manera 
+improrrogable para el día miércoles 9 de septiembre del 2026.
+ 
+Restricciones de Presupuesto:
+ 
+El proyecto cuenta con un 
+presupuesto de cero costos de licenciamiento, lo que obliga al uso 
+exclusivo de herramientas de código abierto \(Open Source\ y 
+servicios en la nube en su capa gratuita \(Free Tier\.
+ 
+Restricciones Tecnológicas:
+ 
+Debido al marco de tiempo 
+limitado, el sistema backend deberá implementarse utilizando 
+lenguajes de alto nivel con soporte nativo para librerías 
+criptográficas ágiles \(ej. Python/FastAPI o Node.js\ La base de 
+ 
+8
+ 
+datos deberá ser relacional para garantizar la integridad de las 
+transacciones \(ACID\
+ 
+2.5 Suposiciones y dependencias
+ 
+Dependencias Externas de Pago:
+ 
+Se asume que el sistema no 
+procesará directamente los números de tarjeta de crédito \(para evitar 
+normativas PCI
+-
+DSS complejas\ En su lugar, se dependerá de un 
+entorno de pruebas \(Sandbox\ proporcionado por un tercero \(ej. PayPal 
+Sandbox o Stripe Test Mod
+e\para simular el procesamiento de 
+transacciones en la pasarela.
+ 
+Infraestructura de Llaves Públicas \(PKI\:
+ 
+Para el entorno de 
+producción simulado, se asume la dependencia de la autoridad 
+certificadora "Let's Encrypt" para la generación gratuita de certificados 
+TLS/SSL, garantizando comunicaciones cifradas \(HTTPS\ Para fines de 
+demostración en entornos locales
+ 
+de desarrollo, se asume el uso de 
+autoridades certificadoras locales simuladas que replican el 
+comportamiento de Let's Encrypt.
+ 
+3. Requisitos Específicos
+ 
+3.1 Requisitos Funcionales
+ 
+Los requisitos funcionales describen las acciones específicas que el 
+sistema debe ejecutar, basándose en los flujos operativos y de venta. 
+ 
+ 
+ 
+9
+ 
+ID
+ 
+Función Principal
+ 
+Descripción del Requisito
+ 
+RF
+-
+01
+ 
+Autenticación
+ 
+El sistema debe permitir el inicio 
+de sesión mediante credenciales 
+válidas tanto para Clientes como 
+para 
+Administradores/Contadores.
+ 
+RF
+-
+02
+ 
+Personalización
+ 
+El sistema debe permitir al cliente 
+seleccionar un producto y definir 
+sus características específicas 
+\(marca, color, madera, textura, 
+dimensión\
+ 
+RF
+-
+03
+ 
+Generación de 
+Contrato
+ 
+Al confirmar el pedido, el sistema 
+debe generar automáticamente 
+un reporte tipo "contrato, compra 
+venta" en formato digital y permitir 
+su descarga.
+ 
+RF
+-
+04
+ 
+Validación de 
+Inventario
+ 
+Previo al pago, el sistema debe 
+verificar en la base de datos si 
+existe stock disponible para la 
+madera solicitada.
+ 
+RF
+-
+05
+ 
+Procesamiento de 
+Pago
+ 
+El sistema debe permitir al 
+usuario seleccionar un método de 
+pago y procesar la transacción 
+comunicándose con una pasarela 
+externa.
+ 
+ 
+10
+ 
+3.2 Requisitos No Funcionales 
+ 
+Dado que el objetivo central del proyecto es la implementación de 
+mecanismos de ciberseguridad, estos requisitos se definen con 
+prioridad crítica.
+ 
+ 
+ID
+ 
+Categoría
+ 
+Descripción 
+del Requisito
+ 
+Criterio de Aceptación 
+\(Implementación 
+Técnica\
+ 
+RNF
+-
+01
+ 
+Autenticidad
+ 
+Control de 
+acceso seguro 
+a las sesiones 
+de los 
+usuarios.
+ 
+El sistema utilizará 
+JSON Web Tokens 
+\(JWT\ o sesiones 
+seguras por cookies 
+\(HttpOnly, Secure\ para 
+validar que las 
+RF
+-
+06
+ 
+Gestión de 
+Faltantes/Rechazos
+ 
+Si no hay stock o el pago es 
+rechazado, el sistema debe 
+mostrar un error, notificar la 
+causa y permitir modificar el 
+carrito o reintentar.
+ 
+RF
+-
+07
+ 
+Deducción de 
+Inventario
+ 
+Si el pago es aprobado, el 
+sistema debe generar un número 
+de orden, un recibo y descontar el 
+producto del inventario de la base 
+de datos.
+ 
+RF
+-
+08
+ 
+Notificación Interna
+ 
+Tras una transacción exitosa, el 
+sistema debe enviar una 
+notificación al módulo de 
+Almacén para iniciar el proceso 
+de envío.
+ 
+ 
+11
+ 
+peticiones provienen de 
+usuarios legítimos.
+ 
+RNF
+-
+02
+ 
+No Repudio
+ 
+Vinculación 
+irrefutable del 
+cliente con el 
+reporte de 
+contrato de 
+compra
+-
+venta.
+ 
+El sistema aplicará una 
+Firma Digital 
+\(criptografía asimétrica 
+como RSA\ontrato. 
+Se generará un hash del 
+documento firmado con 
+una clave privada 
+vinculada a la sesión.
+ 
+RNF
+-
+03
+ 
+Trazabilidad
+ 
+Registro 
+histórico 
+inmutable de 
+las 
+transacciones, 
+aprobaciones 
+y rechazos.
+ 
+Existirá un Log de 
+Auditoría \(Append
+-
+only\
+que registrará: 
+Timestamp, ID de 
+Usuario, IP, Hash de la 
+transacción y resultado. 
+No se permitirán 
+borrados.
+ 
+RNF
+-
+04
+ 
+Confidenciali
+dad
+ 
+Protección de 
+los datos en 
+tránsito 
+durante el flujo 
+operativo de 
+venta web.
+ 
+Todas las 
+comunicaciones cliente
+-
+servidor deberán estar 
+cifradas mediante el 
+protocolo TLS \(HTTPS\
+para evitar la 
+interceptación de datos 
+sensibles.
+ 
+ 
+12
+ 
+3.3 Requisitos de Interfaz Externa
+ 
+3.3.1 Interfaces de Usuario \(UI\
+ 
+La aplicación será accesible a través de navegadores web estándar 
+\(Chrome, Firefox, Edge\ Se implementará una arquitectura cliente
+-
+servidor donde la capa de presentación \(HTML/CSS/JS\estará 
+desacoplada de la lógica de negocio.
+ 
+
+ 
+Para el Cliente:
+ 
+La interfaz se enfocará en la usabilidad, 
+presentando un flujo de "Carrito y Checkout" paso a paso para la 
+selección de la madera, visualización clara de errores \(ej. "stock 
+insuficiente"\y un botón para descargar el contrato de compra
+-
+venta.
+ 
+
+ 
+Para el Administrador/Contador:
+ 
+Se proveerá una vista tipo 
+"Dashboard" minimalista que mostrará la tabla del log de auditoría 
+y el estado de las facturas/pagos.
+ 
+3.3.2 Interfaces de Hardware:
+ 
+El sistema no requiere hardware especializado por parte del cliente ni de 
+la empresa, operando bajo el supuesto de que se utilizarán 
+computadoras o dispositivos móviles estándar con conexión a internet. 
+El servidor se alojará en un entorno virtualizado est
+ándar \(arquitectura 
+x86_64 o ARM\
+ 
+3.3.3 Interfaces de Software:
+ 
+
+ 
+API REST Interna:
+ 
+El frontend se comunicará con el backend web 
+consumiendo una API RESTful. Los intercambios de información 
+\(como el envío de credenciales o el detalle del pedido\
+realizarán exclusivamente mediante el formato de datos JSON.
+ 
+
+ 
+Base de Datos:
+ 
+El backend interactuará con un motor de base de 
+datos relacional \(ej. SQLite o PostgreSQL\zando consultas 
+parametrizadas o un ORM para prevenir vulnerabilidades de 
+inyección SQL.
+ 
+ 
+13
+ 
+3.3.4 Interfaces de Comunicación:
+ 
+
+ 
+Protocolo de Red:
+ 
+Todas las comunicaciones entre el cliente web 
+y el servidor, así como entre el servidor y servicios de terceros, se 
+realizarán obligatoriamente sobre el protocolo HTTPS \(TLS 1.2 o 
+superior\para cifrar los datos en tránsito.
+ 
+
+ 
+Integración de Pasarela:
+ 
+El sistema de backend establecerá una 
+conexión segura de servidor a servidor \(Server
+-
+to
+-
+Server\ con una 
+API de pasarela de pagos externa en modo 
+Sandbox
+ 
+\(pruebas\ 
+para procesar y validar el estado de las transacciones financieras.
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Descripción del Diseño de Software \(SDD\
+ 
+1. Introducción al Diseño
+ 
+1.1 Propósito y alcance del diseño
+ 
+El propósito de este diseño es traducir los requisitos de la Especificación 
+de Requisitos de Software \(ERS\en una solución web sencilla, ejecutable 
+ 
+14
+ 
+en localhost y suficientemente clara para demostrar principios de 
+ciberseguridad. El diseño cubre el recorrido completo de la compraventa 
+de madera: inicio de sesión, consulta y personalización del producto, 
+carrito, checkout, generación del contrato, pago
+ 
+en un entorno de pruebas 
+y confirmación del pedido.
+ 
+El backend será responsable de la lógica de negocio, la validación de 
+datos, el control de acceso, el registro de auditoría y la comunicación con 
+el proveedor de pagos. El frontend permitirá al cliente interactuar con el 
+catálogo y consultar el estado de s
+u pedido. La logística física, la gestión 
+avanzada del almacén y el envío real quedan fuera del sistema; después 
+de una transacción aprobada sólo se enviará una notificación de cambio 
+de estado al área correspondiente.
+ 
+2. Descripción de la Arquitectura
+ 
+2.2 Vista Lógica
+ 
+La vista lógica organiza las responsabilidades del software y evita que la 
+interfaz tome decisiones que corresponden al servidor. El navegador 
+consume endpoints JSON; los controladores reciben las solicitudes y 
+comprueban la sesión; los servicios ejecutan 
+las reglas de negocio; y la 
+capa de datos consulta o actualiza las entidades mediante 
+transacciones.
+ 
+Capa de presentación: 
+componentes de login, catálogo, detalle de 
+producto, carrito, checkout, confirmación y panel de consulta para el 
+administrador o contador.
+ 
+Capa de aplicación: 
+controladores para autenticación, productos, 
+carrito, pedidos, contratos, pagos y auditoría. Cada controlador valida el 
+rol y delega la operación al servicio correspondiente.
+ 
+Capa de dominio: 
+reglas para comprobar stock, calcular el importe a 
+partir de datos confiables del servidor, crear la orden, generar el 
+contrato y cambiar el estado del pedido solo cuando se cumplan las 
+condiciones definidas.
+ 
+ 
+15
+ 
+Capa de infraestructura: 
+ORM o repositorios, SQLite, almacenamiento 
+local de claves de demostración, cliente HTTPS de la pasarela y 
+generador de logs.
+ 
+La comunicación entre capas se hará mediante objetos o esquemas 
+validados. El frontend podrá solicitar una operación, pero no podrá 
+asignar por sí mismo un precio, aprobar un pago, cambiar el stock ni 
+consultar bitácoras de otro usuario.
+ 
+Figura 1. Contexto de actores y áreas relacionadas con la maderería
+ 
+ 
+ 
+2.3 Vista de Proceso
+ 
+El flujo normal inicia con la autenticación del cliente y termina con la 
+confirmación del pedido. En cada paso el backend valida la sesión y 
+conserva el estado en la base de datos. Si el inventario es insuficiente, 
+el usuario regresa al catálogo o modifica
+ 
+el carrito. Si el proveedor 
+rechaza el pago o no responde, la orden queda pendiente o rechazada 
+y el cliente recibe un mensaje general que no expone información 
+sensible.
+ 
+Figura 2. Flujo general de la página web
+ 
+ 
+16
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+17
+ 
+2.4 Vista de Despliegue
+ 
+Durante la demostración, todos los componentes principales se 
+ejecutarán en una sola laptop. El navegador accederá al frontend 
+mediante localhost; el servidor FastAPI atenderá la API; y SQLite 
+almacenará los datos en un archivo local. La pasarela de pagos 
+será el 
+único componente fuera de la laptop y se utilizará exclusivamente en 
+modo Sandbox.
+ 
+Ejecución local: 
+un proceso para el backend y el servidor de archivos 
+estáticos del frontend. La base de datos y los logs se guardarán en el 
+directorio del proyecto con permisos restringidos al usuario de la laptop.
+ 
+Comunicaciones: 
+para una demostración básica se puede usar HTTP 
+en localhost; cuando se prueben credenciales o una integración externa 
+se habilitará HTTPS con un certificado local de desarrollo. En ningún 
+caso se enviarán secretos por una conexión sin protección hacia el 
+tercero.
+ 
+Configuración: 
+las claves de prueba, la cadena de conexión y los 
+secretos de sesión se leerán desde variables de entorno o un archivo 
+local excluido del control de versiones. No se incluirán secretos dentro 
+del código fuente.
+ 
+Límite del despliegue: 
+Docker, un servicio cloud y un balanceador no 
+son necesarios para este prototipo. Podrían incorporarse después si el 
+proyecto se quiere escalar.
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+18
+ 
+3. Diseño de Detalle
+ 
+3.1 Componentes del sistema
+ 
+Módulo de autenticación: 
+registra e inicia sesión de usuarios, compara 
+contraseñas almacenadas como hash, crea y revoca sesiones, y aplica 
+una separación básica entre Cliente y Administrador/Contador.
+ 
+Módulo de catálogo y carrito: 
+consulta productos disponibles, recibe 
+las características elegidas, valida cantidades y mantiene el contenido 
+del carrito asociado a la sesión. El precio y el stock se vuelven a 
+consultar en el servidor antes de crear una orden.
+ 
+Figura 3. Proceso de selección y personalización del producto
+ 
+ 
+Módulo de pedidos: 
+crea la orden, sus partidas y el importe calculado; 
+controla los estados pendiente, pagada, rechazada y cancelada; y evita 
+descontar inventario antes de tener una confirmación válida.
+ 
+ 
+19
+ 
+Módulo de contrato: 
+construye una representación canónica del 
+pedido, calcula su hash SHA
+-
+256 y genera una firma RSA
+-
+PSS con una 
+clave privada local de demostración. El contrato conserva la firma y la 
+clave pública o su huella para poder verificarlo.
+ 
+Módulo de pagos: 
+crea la solicitud al sandbox, registra el identificador 
+de la operación y confirma el resultado desde el servidor. La respuesta 
+del navegador no será suficiente para marcar una orden como pagada.
+ 
+Figura 4. Flujo operativo posterior a la confirmación de la venta
+ 
+ 
+ 
+Módulo de auditoría: 
+registra eventos de seguridad y de negocio 
+mediante una cadena de hashes. El panel interno solo permite consultar 
+y verificar la secuencia; la aplicación no ofrecerá una operación para 
+borrar entradas.
+ 
+ 
+20
+ 
+3.2 Diseño de la Base de Datos
+ 
+La base de datos será relacional y utilizará claves primarias, claves 
+foráneas, restricciones de unicidad y transacciones. Las entidades 
+mínimas son las siguientes:
+ 
+
+ 
+Usuarios: 
+id, correo, password_hash, rol, estado y fecha de alta. 
+Nunca se almacenará la contraseña en texto plano.
+ 
+
+ 
+Sesiones: 
+id, usuario, hash del token de sesión, fecha de 
+expiración y fecha de revocación. El token original solo vivirá en la 
+cookie del navegador.
+ 
+
+ 
+Productos: 
+id, tipo de madera, marca, color, textura, 
+dimensiones, precio, existencia y estado. Las dimensiones se 
+validarán en el servidor.
+ 
+
+ 
+Carritos y partidas: 
+carrito, producto, características 
+seleccionadas y cantidad. Un usuario podrá tener un carrito activo 
+y el backend recalculará el total.
+ 
+
+ 
+Pedidos y partidas: 
+orden, usuario, estado, total, fechas e 
+identificador de idempotencia; las partidas conservarán el precio 
+aplicado y la configuración solicitada.
+ 
+
+ 
+Pagos y contratos: 
+identificador del proveedor, estado de la 
+transacción, hash del contrato, firma digital, huella de la clave 
+pública y fecha de generación. No se guardarán datos bancarios.
+ 
+
+ 
+Logs_Auditoria: 
+id, fecha UTC, usuario, acción, resultado, 
+dirección IP cuando esté disponible, hash anterior y hash actual. 
+Las operaciones de escritura se ejecutarán desde el backend y no 
+habrá borrado desde la interfaz.
+ 
+La confirmación del pedido se ejecutará dentro de una transacción: se 
+verificará el stock, se actualizará la orden, se descontará el inventario y 
+se generará el evento de auditoría. Si una operación falla, se hará 
+rollback para evitar pedidos pagados sin e
+xistencia o existencias 
+descontadas sin pedido válido.
+ 
+ 
+ 
+ 
+ 
+21
+ 
+Figura 5. Flujo de validación del pago y del inventario
+ 
+ 
+ 
+3.3 Diseño de la Interfaz y APIs
+ 
+3.3.1 Diseño de la interfaz de usuario
+.
+ 
+El frontend se dividirá en vistas sencillas y consecutivas: Login, 
+Catálogo, Detalle del producto, Carrito, Checkout, Confirmación y 
+Consulta de pedido. Cada vista mostrará el estado de la operación y un 
+mensaje comprensible.
+ 
+Entrada de datos: 
+el backend repetirá la validación de correo, 
+contraseña, cantidades, dimensiones, precios y estados.
+ 
+ 
+22
+ 
+Protección de la interfaz: 
+se escapará contenido que provenga del 
+usuario, se evitará insertar HTML sin sanitización y se enviarán 
+encabezados básicos como X
+-
+Content
+-
+Type
+-
+Options, Referrer
+-
+Policy y 
+una política de contenido sencilla.
+ 
+Acciones críticas: 
+agregar al carrito, confirmar contrato, iniciar pago y 
+consultar auditoría requerirán una sesión válida; las operaciones que 
+cambian estado usarán un token CSRF o una validación equivalente.
+ 
+3.3.2 Diseño del backend y de las APIs
+ 
+Las interfaces se expondrán como endpoints REST que intercambian 
+JSON. Los esquemas de entrada y salida se validarán en el servidor y 
+cada respuesta utilizará un código HTTP coherente. Como referencia, el 
+contrato mínimo de la API es el siguiente:
+ 
+POST /api/auth/login y POST /api/auth/logout: 
+inician o terminan la 
+sesión y devuelven únicamente el estado de autenticación, nunca la 
+contraseña ni el hash.
+ 
+GET /api/productos y POST /api/carrito/items: 
+consultan el catálogo y 
+agregan una configuración al carrito después de validar el producto y la 
+cantidad.
+ 
+GET /api/carrito y POST /api/pedidos/preparar: 
+muestran el resumen 
+y vuelven a calcular precio, stock e importe antes de generar la orden.
+ 
+POST /api/contratos/{id}/firmar: 
+genera el documento canónico, su 
+hash y la firma digital de demostración asociada al usuario autenticado.
+ 
+POST /api/pagos y POST /api/pagos/webhook: 
+crean la operación en 
+el sandbox y reciben la confirmación firmada o verificada por el 
+backend. Se usará una clave de idempotencia para no duplicar cargos.
+ 
+GET /api/pedidos/{id} y GET /api/auditoria: 
+permiten consultar el 
+resultado propio del cliente o la información de auditoría al rol interno 
+autorizado.
+ 
+ 
+ 
+ 
+23
+ 
+ 
+Plan de Pruebas de Software \(STD\
+ 
+ 
+1. Enfoque de Pruebas
+ 
+Dado que es una materia de ciberseguridad, el enfoque debe estar fuertemente inclinado 
+hacia las Pruebas de Seguridad \(Security Testing\ y Pruebas de Integración del flujo de pago.
+ 
+El plan cubre cuatro tipos de prueba:
+ 
+
+      
+Pruebas funcionales: validan que cada requisito funcional \(RF
+-
+01 a RF
+-
+08\ del 
+ERS opera como se especificó.
+ 
+
+      
+Pruebas no funcionales: validan autenticidad, no repudio, trazabilidad y 
+confidencialidad \(RNF
+-
+01 a RNF
+-
+04\.
+ 
+
+      
+Pruebas de seguridad: validan resistencia ante ataques comunes según OWASP 
+Top 10 \(inyección SQL, XSS, manipulación de tokens, CSRF, exposición de datos 
+sensibles\.
+ 
+
+      
+
+
+Sandbox.
+ 
+Herramientas utilizadas: Postman/Insomnia \(pruebas de API\, OWASP ZAP \(análisis de 
+vulnerabilidades web\ herramientas de desarrollador del navegador \(inspección de 
+cookies/tokens\y el entorno Sandbox de la pasarela de pagos.
+ 
+Ambiente de pruebas: ejecución local \(localhost\, backend FastAPI, base de datos SQLite y 
+pasarela de pagos en modo Sandbox, conforme a la Vista de Despliegue descrita en el SDD.
+ 
+2. Criterios de Aceptación
+ 
+Un caso de prueba se considera aprobado cuando el resultado obtenido coincide 
+exactamente con el resultado esperado y no se detecta ninguna filtración de datos sensibles 
+ni comportamiento no autorizado. Se considera fallido si el sistema permite una acción
+ 
+que 
+debería haber rechazado \(ej. token inválido, SQLi exitoso, acceso sin rol autorizado\.
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+3. Casos de Prueba
+ 
+ 
+24
+ 
+ID
+ 
+Descripción / 
+Objetivo
+ 
+Entrada / Acción 
+\(Sugerida\
+ 
+Resultado Esperado
+ 
+Estado
+ 
+CP
+-
+01
+ 
+Validar 
+Autenticidad
+ 
+Usuario ingresa 
+credenciales 
+correctas y se 
+intercepta el token.
+ 
+El sistema rechaza 
+peticiones con un token 
+modificado \(firma 
+inválida\.
+ 
+Pendiente
+ 
+CP
+-
+02
+ 
+Validar No 
+Repudio en 
+Contrato
+ 
+Cliente selecciona 
+características de 
+madera y se genera 
+contrato.
+ 
+El contrato incluye la 
+firma digital verificable 
+del usuario y un hash 
+único del documento.
+ 
+Pendiente
+ 
+CP
+-
+03
+ 
+Validar 
+Trazabilidad \(Log\
+ 
+Procesar 
+transacción en 
+pasarela \(aprobada 
+o rechazada\.
+ 
+Se genera una entrada 
+en el log con fecha, hora, 
+IP, usuario y acción, sin 
+permitir su borrado.
+ 
+Pendiente
+ 
+CP
+-
+04
+ 
+Validar 
+Restricción de 
+Inventario
+ 
+Intentar comprar 
+cuando no hay 
+stock.
+ 
+
+
+el intento en el log de 
+trazabilidad.
+ 
+Pendiente
+ 
+CP
+-
+05
+ 
+Validar 
+Confidencialidad 
+\(TLS\
+ 
+Interceptar el tráfico 
+entre navegador y 
+servidor con un 
+proxy.
+ 
+Los datos viajan cifrados 
+por HTTPS; no es posible 
+leer credenciales ni datos 
+del contrato en texto 
+plano.
+ 
+Pendiente
+ 
+CP
+-
+06
+ 
+Validar Login \(RF
+-
+01\
+ 
+Cliente y 
+Administrador 
+inician sesión con 
+credenciales válidas 
+e inválidas.
+ 
+Acceso concedido solo 
+con credenciales 
+correctas; mensaje 
+genérico ante error, sin 
+indicar si el usuario 
+existe.
+ 
+Pendiente
+ 
+CP
+-
+07
+ 
+Validar 
+Personalización 
+de Producto \(RF
+-
+02\
+ 
+Seleccionar marca, 
+color, textura y 
+dimensión de la 
+madera.
+ 
+El sistema guarda la 
+configuración y recalcula 
+el precio en el servidor, 
+no acepta el precio 
+enviado desde el cliente.
+ 
+Pendiente
+ 
+CP
+-
+08
+ 
+Validar 
+Generación de 
+Contrato \(RF
+-
+03\
+ 
+Confirmar un 
+pedido válido.
+ 
+Se genera un contrato 
+descargable en formato 
+digital con firma y hash.
+ 
+Pendiente
+ 
+CP
+-
+09
+ 
+Validar 
+Verificación de 
+Inventario \(RF
+-
+04\
+ 
+Consultar 
+disponibilidad antes 
+de pagar.
+ 
+El sistema bloquea el 
+pago si no hay stock 
+suficiente.
+ 
+Pendiente
+ 
+ 
+25
+ 
+CP
+-
+10
+ 
+Validar 
+Procesamiento de 
+Pago \(RF
+-
+05\
+ 
+Seleccionar método 
+de pago y enviarlo a 
+la pasarela 
+Sandbox.
+ 
+La transacción se 
+procesa y el estado se 
+confirma únicamente 
+desde el servidor 
+\(webhook\ nunca desde 
+el navegador.
+ 
+Pendiente
+ 
+CP
+-
+11
+ 
+Validar Gestión 
+de Rechazos \(RF
+-
+06\
+ 
+Forzar un rechazo 
+de pago en el 
+Sandbox.
+ 
+El sistema muestra el 
+error, permite reintentar y 
+no descuenta inventario.
+ 
+Pendiente
+ 
+CP
+-
+12
+ 
+Validar Deducción 
+de Inventario \(RF
+-
+07\
+ 
+Completar una 
+compra exitosa.
+ 
+Se genera número de 
+orden y recibo, y el 
+inventario se descuenta 
+en la base de datos.
+ 
+Pendiente
+ 
+CP
+-
+13
+ 
+Validar 
+Notificación 
+Interna \(RF
+-
+08\
+ 
+Completar una 
+transacción exitosa.
+ 
+Se envía una notificación 
+automática al módulo de 
+Almacén.
+ 
+Pendiente
+ 
+CP
+-
+14
+ 
+Inyección SQL en 
+Login
+ 
+Ingresar ' OR '1'='1 
+en campos de 
+usuario/contraseña.
+ 
+La consulta 
+parametrizada/ORM 
+rechaza la entrada; no se 
+concede acceso ni se 
+expone información.
+ 
+Pendiente
+ 
+CP
+-
+15
+ 
+XSS en Campo 
+de 
+Personalización
+ 
+Ingresar 
+<script>alert\(1\scr
+ipt> en un campo 
+de texto \(ej. 
+color/textura\.
+ 
+El contenido se 
+escapa/sanitiza y no se 
+ejecuta como script en el 
+navegador.
+ 
+Pendiente
+ 
+CP
+-
+16
+ 
+CSRF en Acción 
+Crítica
+ 
+Enviar una petición 
+
+desde un origen 
+externo sin token 
+CSRF válido.
+ 
+La petición es rechazada 
+por falta de token CSRF 
+válido.
+ 
+Pendiente
+ 
+CP
+-
+17
+ 
+Acceso No 
+Autorizado a 
+Auditoría
+ 
+Cliente \(sin rol de 
+Administrador/Cont
+ador\ intenta 
+acceder a GET 
+/api/auditoria.
+ 
+El sistema responde 403 
+Forbidden; el intento 
+queda registrado en el 
+log.
+ 
+Pendiente
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+26
+ 
+4. Roles y Responsabilidades
+ 
+Integrante
+ 
+Casos de prueba asignados
+ 
+Debbie Marina Padilla Lara
+ 
+CP
+-
+01, CP
+-
+02, CP
+-
+03
+ 
+Daniel Aguilar Garduño
+ 
+CP
+-
+05, CP
+-
+06, CP
+-
+07
+ 
+David Nava Fuentes
+ 
+CP
+-
+08, CP
+-
+09, CP
+-
+10, CP
+-
+11
+ 
+Isaac Sánchez Camacho
+ 
+CP
+-
+14, CP
+-
+15, CP
+-
+16, CP
+-
+17
+ 
+ 
+ 
+5. Cronograma
+ 
+Las pruebas deben ejecutarse una vez concluido el desarrollo del módulo correspondiente, 
+dejando margen para corrección de fallos antes de la fecha límite del 9 de septiembre de 
+2026, conforme a la restricción de tiempo definida en el ERS.
+ 
+6. Riesgos y Contingencias
+ 
+
+      
+Dependencia del Sandbox externo: si el servicio de pago de prueba \(PayPal 
+Sandbox/Stripe Test\ no está disponible, se usarán mocks locales para no 
+detener las pruebas de integración.
+ 
+
+      
+Tiempo limitado: priorizar los casos de seguridad \(CP
+-
+01, CP
+-
+02, CP
+-
+03, CP
+-
+14 a 
+CP
+-
+17\ sobre los puramente funcionales si el tiempo se reduce.
+ 
+ 
