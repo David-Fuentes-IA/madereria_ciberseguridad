@@ -142,7 +142,14 @@ const procesarPago = async (req, res) => {
     return res.status(400).json({ mensaje: error.message });
   }
 
-  // --- BYPASS APLICADO: Se eliminó la validación estricta de contraseña aquí para evitar el Error 500 ---
+  // --- Verificación de doble factor: se exige la contraseña del usuario para autorizar el pago ---
+  if (typeof req.body?.password !== 'string' || !req.body.password.trim()) {
+    return res.status(401).json({ mensaje: 'Se requiere tu contraseña para autorizar esta compra.' });
+  }
+  const credencialValida = await verificarReautenticacion(req);
+  if (!credencialValida) {
+    return res.status(401).json({ mensaje: 'Contraseña incorrecta. No se pudo autorizar la compra.' });
+  }
 
   const session = await mongoose.startSession();
   let resultado;

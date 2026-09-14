@@ -867,11 +867,18 @@
     try {
       await executeCheckout(password);
     } catch (error) {
-      if (error.status === 401 && !String(error.message).toLowerCase().includes('contraseña')) {
-        closePaymentAuthModal();
-        clearSession();
-        setView('auth');
-        setAuthFeedback('Tu sesión terminó. Inicia sesión nuevamente para continuar.', true);
+      if (error.status === 401) {
+        const msg = String(error.message || '').toLowerCase();
+        // Si el servidor rechazó la contraseña → mostrar el error en el modal, NO cerrar sesión
+        if (msg.includes('contraseña') || msg.includes('password') || msg.includes('incorrecta') || msg.includes('autorizar')) {
+          setPaymentAuthFeedback(error.message || 'Contraseña incorrecta. Inténtalo de nuevo.', true);
+        } else {
+          // Sesión expirada o token revocado → sí cerrar sesión y redirigir
+          closePaymentAuthModal();
+          clearSession();
+          setView('auth');
+          setAuthFeedback('Tu sesión terminó. Inicia sesión nuevamente para continuar.', true);
+        }
       } else {
         setPaymentAuthFeedback(error.message || 'No fue posible autorizar esta compra.', true);
       }
@@ -879,6 +886,7 @@
       submitButton.disabled = false;
     }
   };
+
 
   document.addEventListener('click', (event) => {
     const viewControl = event.target.closest('[data-view]');
