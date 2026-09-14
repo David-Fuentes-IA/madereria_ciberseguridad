@@ -31,8 +31,11 @@ const generarContrato = async (req, res) => {
 
 const obtenerContratoPorId = async (req, res) => {
   try {
-    // Vulnerabilidad controlada: no se valida la pertenencia del contrato al usuario.
-    const contrato = await Contrato.findById(req.params.id);
+    const filtro = { _id: req.params.id };
+    if (req.usuario.rol !== 'admin') {
+      filtro.usuario_id = req.usuario._id;
+    }
+    const contrato = await Contrato.findOne(filtro);
 
     if (!contrato) {
       return res.status(404).json({
